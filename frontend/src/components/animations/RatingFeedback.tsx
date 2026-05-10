@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
+import { MSparkle, MThumbUp, MHardFace, MBurst, MBolt, MFlame } from '../MemozyEmoji';
 
 export interface RatingFeedbackProps {
   rating: 'easy' | 'good' | 'hard' | null;
@@ -9,15 +10,15 @@ export interface RatingFeedbackProps {
 }
 
 const RATING_CFG = {
-  easy: { emoji: '✨', text: 'EASY!',  color: '#22c55e' },
-  good: { emoji: '👍', text: 'GOOD!',  color: '#6366f1' },
-  hard: { emoji: '😤', text: 'HARD',   color: '#ef4444' },
+  easy: { icon: <MSparkle size={38} />,   text: 'EASY!', color: '#22c55e' },
+  good: { icon: <MThumbUp size={38} />,   text: 'GOOD!', color: '#6366f1' },
+  hard: { icon: <MHardFace size={38} />,  text: 'HARD',  color: '#ef4444' },
 };
 
 const COMBO_TIERS = [
-  { min: 8, emoji: '💥', label: 'UNSTOPPABLE!' },
-  { min: 5, emoji: '⚡', label: 'ON FIRE!' },
-  { min: 3, emoji: '🔥', label: 'COMBO!' },
+  { min: 8, icon: <MBurst size={30} />, label: 'UNSTOPPABLE!' },
+  { min: 5, icon: <MBolt size={30} />,  label: 'ON FIRE!' },
+  { min: 3, icon: <MFlame size={30} />, label: 'COMBO!' },
 ];
 
 const RatingFeedback: React.FC<RatingFeedbackProps> = ({ rating, ratingKey, combo }) => {
@@ -66,7 +67,7 @@ const RatingFeedback: React.FC<RatingFeedbackProps> = ({ rating, ratingKey, comb
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '2.2rem', lineHeight: 1 }}>{cfg.emoji}</div>
+            <div style={{ lineHeight: 1 }}>{cfg.icon}</div>
             <div style={{
               fontFamily: theme.font, fontWeight: 900, fontSize: '1.35rem',
               color: cfg.color, letterSpacing: '0.08em',
@@ -98,7 +99,7 @@ const RatingFeedback: React.FC<RatingFeedbackProps> = ({ rating, ratingKey, comb
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '1.7rem', lineHeight: 1 }}>{comboTier.emoji}</div>
+            <div style={{ lineHeight: 1 }}>{comboTier.icon}</div>
             <div style={{
               fontFamily: theme.font, fontWeight: 900, fontSize: '0.88rem',
               color: theme.primary, letterSpacing: '0.05em',

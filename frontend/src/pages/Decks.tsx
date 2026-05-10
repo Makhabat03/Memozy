@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { decksApi, Deck } from '../hooks/useApi';
 import { Share2, BookOpen, Trash2 } from 'lucide-react';
+import GlassButton from '../components/GlassButton';
 
 const Decks: React.FC = () => {
   const { theme } = useTheme();
@@ -42,9 +43,7 @@ const Decks: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, margin: 0 }}>My Decks</h1>
         <Link to="/create">
-          <button style={{ background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.65rem 1.25rem', fontFamily: theme.font, fontWeight: 700, cursor: 'pointer' }}>
-            + New Deck
-          </button>
+          <GlassButton size="sm">+ New Deck</GlassButton>
         </Link>
       </div>
 
@@ -61,7 +60,8 @@ const Decks: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', boxShadow: theme.shadow, border: `1px solid ${theme.primary}22` }}
+              className="glass-card"
+              style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', boxShadow: theme.shadow, border: `1px solid ${theme.primary}28` }}
             >
               <div style={{ fontWeight: 800, fontSize: '1.05rem', color: theme.text, marginBottom: '0.4rem' }}>{deck.title}</div>
               {deck.description && <div style={{ fontSize: '0.85rem', color: theme.textLight, marginBottom: '0.75rem' }}>{deck.description}</div>}
@@ -79,24 +79,27 @@ const Decks: React.FC = () => {
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <Link to={`/study/${deck.id}`} style={{ flex: 1, textDecoration: 'none' }}>
-                  <button style={{ width: '100%', background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.6rem', fontFamily: theme.font, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
-                    Study
-                  </button>
+                  <GlassButton fullWidth size="sm">Study</GlassButton>
                 </Link>
-                <button
+                <GlassButton
                   onClick={() => handleShare(deck)}
                   title="Share"
-                  style={{ background: copied === deck.id ? `${theme.accent}22` : `${theme.primary}11`, border: 'none', borderRadius: theme.borderRadius, padding: '0.6rem 0.75rem', cursor: 'pointer', color: copied === deck.id ? theme.accent : theme.primary }}
+                  variant="outline"
+                  size="sm"
+                  tintColor={copied === deck.id ? theme.accent : theme.primary}
+                  style={{ padding: '0.6rem 0.75rem' }}
                 >
                   <Share2 size={16} />
-                </button>
-                <button
+                </GlassButton>
+                <GlassButton
                   onClick={() => handleDelete(deck.id)}
                   title="Delete"
-                  style={{ background: '#fef2f2', border: 'none', borderRadius: theme.borderRadius, padding: '0.6rem 0.75rem', cursor: 'pointer', color: '#dc2626' }}
+                  variant="danger"
+                  size="sm"
+                  style={{ padding: '0.6rem 0.75rem' }}
                 >
                   <Trash2 size={16} />
-                </button>
+                </GlassButton>
               </div>
               {copied === deck.id && <div style={{ fontSize: '0.8rem', color: theme.accent, marginTop: '0.5rem', textAlign: 'center' }}>Link copied! ✓</div>}
             </motion.div>

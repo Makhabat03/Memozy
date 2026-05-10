@@ -29,60 +29,92 @@ async def study_complete(body: StudyCompleteRequest):
         profile_result = sb.table("profiles").select("*").eq("id", body.user_id).single().execute()
         profile = profile_result.data
 
+        # ── Streak logic ──────────────────────────────────────────────────────
         today = date.today()
         last_date = profile.get("streak_last_date")
         streak = profile.get("streak_count", 0)
 
         if last_date:
-            last = date.fromisoformat(str(last_date))
+            last = date.fromisoformat(str(last_date)[:10])
             delta = (today - last).days
-            if delta == 1:
-                streak += 1
-            elif delta > 1:
-                streak = 1
+            if delta == 0:
+                pass          # already studied today, keep streak
+            elif delta == 1:
+                streak += 1   # consecutive day
+            else:
+                streak = 1    # broken
         else:
             streak = 1
 
-        streak_bonus = min(streak * 5, 50)
-        xp_earned = body.correct_count * 10 + streak_bonus
+        # ── Duolingo-style XP ─────────────────────────────────────────────────
+        #   Base 10 XP for finishing any session
+        #   +5 XP per correct card
+        #   +15 XP accuracy bonus at ≥ 80 %
+        #   +25 XP perfect score bonus
+        #   Streak multiplier: ×1.25 at 3d, ×1.5 at 7d, ×2.0 at 30d
+        accuracy = body.correct_count / body.cards_reviewed if body.cards_reviewed > 0 else 0
+        base   = 10
+        card_xp = body.correct_count * 5
+        acc_bonus = 25 if accuracy == 1.0 else (15 if accuracy >= 0.8 else 0)
 
-        current_xp = profile.get("xp", 0) + xp_earned
+        if streak >= 30:
+            mult = 2.0
+        elif streak >= 7:
+            mult = 1.5
+        elif streak >= 3:
+            mult = 1.25
+        else:
+            mult = 1.0
+
+        xp_earned = round((base + card_xp + acc_bonus) * mult)
+
+        # ── Update profile (only columns that definitely exist) ───────────────
+        current_xp    = profile.get("xp", 0) + xp_earned
         current_level = profile.get("level", 1)
-        new_level = current_xp // 500 + 1
-        leveled_up = new_level > current_level
+        new_level     = current_xp // 500 + 1
+        leveled_up    = new_level > current_level
 
-        new_max_streak = max(profile.get("max_streak", 0), streak)
-        sb.table("profiles").update({
+        profile_update: dict = {
             "xp": current_xp,
             "level": new_level,
             "streak_count": streak,
             "streak_last_date": today.isoformat(),
-            "max_streak": new_max_streak,
-        }).eq("id", body.user_id).execute()
+        }
+        if "max_streak" in profile:
+            profile_update["max_streak"] = max(profile.get("max_streak", 0), streak)
+        if "weekly_xp" in profile:
+            profile_update["weekly_xp"] = profile.get("weekly_xp", 0) + xp_earned
 
-        sb.table("study_sessions").insert({
-            "user_id": body.user_id,
-            "deck_id": body.deck_id,
-            "cards_studied": body.cards_reviewed,
-            "xp_earned": xp_earned,
-        }).execute()
+        sb.table("profiles").update(profile_update).eq("id", body.user_id).execute()
 
-        sessions_result = sb.table("study_sessions").select("cards_studied").eq("user_id", body.user_id).execute()
-        total_cards = sum(s["cards_studied"] for s in sessions_result.data)
+        # ── Study session log (optional — skip if table/columns differ) ───────
+        total_cards = 0
+        try:
+            sb.table("study_sessions").insert({
+                "user_id": body.user_id,
+                "deck_id": body.deck_id,
+                "cards_studied": body.cards_reviewed,
+                "xp_earned": xp_earned,
+            }).execute()
+            sessions_result = sb.table("study_sessions").select("cards_studied").eq("user_id", body.user_id).execute()
+            total_cards = sum(s["cards_studied"] for s in sessions_result.data)
+        except Exception:
+            pass
 
-        existing_badges = sb.table("badges").select("badge_type").eq("user_id", body.user_id).execute()
-        earned_types = {b["badge_type"] for b in existing_badges.data}
-
-        decks_count = sb.table("decks").select("id", count="exact").eq("user_id", body.user_id).execute().count or 0
-
-        updated_profile = {**profile, "level": new_level, "streak_count": streak, "deck_count": decks_count}
-        stats = {"total_cards_studied": total_cards}
-
-        badges_earned = []
-        for badge_type, check_fn in BADGES.items():
-            if badge_type not in earned_types and check_fn(updated_profile, stats):
-                sb.table("badges").insert({"user_id": body.user_id, "badge_type": badge_type}).execute()
-                badges_earned.append(badge_type)
+        # ── Badges ────────────────────────────────────────────────────────────
+        badges_earned: list[str] = []
+        try:
+            existing_badges = sb.table("badges").select("badge_type").eq("user_id", body.user_id).execute()
+            earned_types = {b["badge_type"] for b in existing_badges.data}
+            decks_count = sb.table("decks").select("id", count="exact").eq("user_id", body.user_id).execute().count or 0
+            updated_profile = {**profile, "level": new_level, "streak_count": streak, "deck_count": decks_count}
+            stats = {"total_cards_studied": total_cards}
+            for badge_type, check_fn in BADGES.items():
+                if badge_type not in earned_types and check_fn(updated_profile, stats):
+                    sb.table("badges").insert({"user_id": body.user_id, "badge_type": badge_type}).execute()
+                    badges_earned.append(badge_type)
+        except Exception:
+            pass
 
         return {
             "xp_earned": xp_earned,

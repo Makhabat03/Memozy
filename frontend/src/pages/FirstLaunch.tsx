@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { ThemeName, themes } from '../themes';
+import { MSparkle } from '../components/MemozyEmoji';
 
 interface FirstLaunchProps {
   onComplete: () => void;
@@ -13,7 +14,7 @@ const FirstLaunch: React.FC<FirstLaunchProps> = ({ onComplete }) => {
 
   const handleSelect = (name: ThemeName) => {
     setTheme(name);
-    localStorage.setItem('flashai_launched', '1');
+    localStorage.setItem('memozy_launched', '1');
     onComplete();
   };
 
@@ -45,12 +46,12 @@ const FirstLaunch: React.FC<FirstLaunchProps> = ({ onComplete }) => {
         <motion.div
           animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          style={{ fontSize: '3rem', marginBottom: '0.5rem' }}
+          style={{ marginBottom: '0.5rem' }}
         >
-          ⚡
+          <MSparkle size={52} />
         </motion.div>
         <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#fff', margin: '0 0 0.5rem', textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}>
-          Welcome to FlashAI
+          Welcome to Memozy
         </h1>
         <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', margin: 0 }}>
           Choose your theme to get started

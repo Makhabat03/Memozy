@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { studyApi, gamifyApi, Card } from '../hooks/useApi';
 import { useSounds } from '../hooks/useSounds';
 import DeckCompleteScreen from '../components/animations/DeckCompleteScreen';
+import GlassButton from '../components/GlassButton';
 import CardFlipParticles from '../components/animations/CardFlipParticles';
 import RatingFeedback from '../components/animations/RatingFeedback';
 
@@ -63,7 +64,7 @@ const Study: React.FC = () => {
     const newCombo = isCorrect ? combo + 1 : 0;
 
     if (isCorrect) {
-      play('correct');
+      play(quality === 5 ? 'easy' : 'good');
       setCorrect(newCorrect);
       setCombo(newCombo);
       if (newCombo >= 3) play('combo');
@@ -110,7 +111,9 @@ const Study: React.FC = () => {
         setBadges(res.data.badges_earned);
       }
       if (res.data.streak > 1) play('streakContinue');
-    } catch {}
+    } catch (e) {
+      console.error('study-complete failed:', e);
+    }
     setDone(true);
   };
 
@@ -128,12 +131,9 @@ const Study: React.FC = () => {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
         <h2 style={{ color: theme.text }}>All caught up!</h2>
         <p style={{ color: theme.textLight }}>No cards due for review right now.</p>
-        <button
-          onClick={() => navigate('/decks')}
-          style={{ marginTop: '1rem', background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.75rem 1.5rem', fontFamily: theme.font, fontWeight: 700, cursor: 'pointer' }}
-        >
+        <GlassButton onClick={() => navigate('/decks')} style={{ marginTop: '1rem' }}>
           Back to Decks
-        </button>
+        </GlassButton>
       </div>
     );
   }
@@ -347,25 +347,18 @@ const Study: React.FC = () => {
                 {/* Rating buttons */}
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   {[
-                    { label: '😤 Hard', quality: 1, bg: '#fecaca', color: '#dc2626' },
-                    { label: '👍 Good', quality: 3, bg: `${theme.secondary}22`, color: theme.secondary },
-                    { label: '😎 Easy', quality: 5, bg: '#d1fae5', color: '#059669' },
-                  ].map(({ label, quality, bg, color }) => (
-                    <motion.button
+                    { label: '😤 Hard', quality: 1, tintColor: '#dc2626' },
+                    { label: '👍 Good', quality: 3, tintColor: theme.secondary },
+                    { label: '😎 Easy', quality: 5, tintColor: '#059669' },
+                  ].map(({ label, quality, tintColor }) => (
+                    <GlassButton
                       key={quality}
-                      whileHover={{ scale: 1.06, y: -2 }}
-                      whileTap={{ scale: 0.94 }}
                       onClick={() => rate(quality)}
-                      style={{
-                        flex: 1, background: bg, border: 'none',
-                        borderRadius: theme.borderRadius, padding: '0.88rem',
-                        fontFamily: theme.font, fontWeight: 700, fontSize: '0.95rem',
-                        color, cursor: 'pointer',
-                        boxShadow: `0 3px 10px ${color}22`,
-                      }}
+                      tintColor={tintColor}
+                      style={{ flex: 1, padding: '0.88rem', fontSize: '0.95rem' }}
                     >
                       {label}
-                    </motion.button>
+                    </GlassButton>
                   ))}
                 </div>
               </motion.div>

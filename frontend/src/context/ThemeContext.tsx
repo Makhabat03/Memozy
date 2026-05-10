@@ -15,12 +15,14 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [themeName, setThemeName] = useState<ThemeName>(() => {
-    return (localStorage.getItem('flashai_theme') as ThemeName) || 'minimal';
+    const saved = localStorage.getItem('memozy_theme') as ThemeName;
+    // fall back to minimal if saved theme was deleted
+    return saved && saved in themes ? saved : 'minimal';
   });
 
   const setTheme = (name: ThemeName) => {
     setThemeName(name);
-    localStorage.setItem('flashai_theme', name);
+    localStorage.setItem('memozy_theme', name);
   };
 
   const theme = themes[themeName];
@@ -37,6 +39,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.body.style.fontFamily = theme.font;
     document.body.style.background = theme.background;
     document.body.style.color = theme.text;
+    document.body.setAttribute('data-theme', themeName);
   }, [theme]);
 
   return (

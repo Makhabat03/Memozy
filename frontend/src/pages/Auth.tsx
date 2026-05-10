@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Zap } from 'lucide-react';
+import GlassButton from '../components/GlassButton';
 
 const Auth: React.FC = () => {
   const { theme } = useTheme();
@@ -69,9 +69,8 @@ const Auth: React.FC = () => {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Zap size={36} style={{ color: theme.primary }} />
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.primary, margin: '0.5rem 0 0.25rem' }}>
-            FlashAI
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.primary, margin: '0 0 0.25rem' }}>
+            Memozy
           </h1>
           <p style={{ color: theme.textLight, fontSize: '0.95rem' }}>
             {mode === 'login' ? 'Welcome back!' : 'Create your account'}
@@ -110,43 +109,15 @@ const Auth: React.FC = () => {
             <div style={{ color: '#ef4444', fontSize: '0.875rem', textAlign: 'center' }}>{error}</div>
           )}
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            style={{
-              background: theme.primary,
-              color: '#fff',
-              border: 'none',
-              borderRadius: theme.borderRadius,
-              padding: '0.85rem',
-              fontFamily: theme.font,
-              fontSize: '1rem',
-              fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
-          >
+          <GlassButton type="submit" fullWidth loading={loading} size="lg">
             {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
-          </motion.button>
+          </GlassButton>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <button
-            onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: theme.secondary,
-              cursor: 'pointer',
-              fontFamily: theme.font,
-              fontSize: '0.9rem',
-              fontWeight: 600,
-            }}
-          >
+          <GlassButton variant="ghost" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
             {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-          </button>
+          </GlassButton>
         </div>
       </motion.div>
     </div>

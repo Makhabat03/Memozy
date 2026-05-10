@@ -27,13 +27,8 @@ def _generate_cards_from_text(text: str, num_cards: int) -> list[dict]:
                     "For EACH card include these 4 fields:\n"
                     "- front: a clear question or vocabulary term\n"
                     "- back: concise answer (1-3 sentences)\n"
-                    "- hint: a vivid emoji + one-line visual mnemonic to make it memorable "
-                    "(e.g. '🌊🪨 Like ocean eroding rock — slow but unstoppable'). "
-                    "Use concrete images, analogies, or stories. Always include 1-2 emojis.\n"
-                    "- example: if the card is a vocabulary word/term, write one natural sentence "
-                    "showing it used in real context. For concept questions write empty string.\n\n"
                     "Return ONLY a valid JSON array, no other text:\n"
-                    '[{"front":"...","back":"...","hint":"...","example":"..."}, ...]\n\n'
+                    '[{"front":"...","back":"..."}, ...]\n\n'
                     f"TEXT:\n{text[:8000]}"
                 ),
             }
@@ -56,8 +51,6 @@ def _save_cards(deck_id: str, cards: list[dict]) -> list[dict]:
             "deck_id": deck_id,
             "front": c.get("front", ""),
             "back": c.get("back", ""),
-            "hint": c.get("hint", ""),
-            "example": c.get("example", ""),
         }
         for c in cards
     ]

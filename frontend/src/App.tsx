@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AnimatedBackground from './components/AnimatedBackground';
+import CursorEffect from './components/CursorEffect';
 import Navbar from './components/Navbar';
 import FirstLaunch from './pages/FirstLaunch';
 import Auth from './pages/Auth';
@@ -13,7 +14,7 @@ import Decks from './pages/Decks';
 import Social from './pages/Social';
 import ProfilePage from './pages/Profile';
 
-const hasLaunched = () => !!localStorage.getItem('flashai_launched');
+const hasLaunched = () => !!localStorage.getItem('memozy_launched');
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
@@ -57,6 +58,7 @@ const App: React.FC = () => (
       <BrowserRouter>
         {/* Animated background behind everything */}
         <AnimatedBackground />
+        <CursorEffect />
         {/* All app content sits above the canvas */}
         <div style={{ position: 'relative', zIndex: 1 }}>
           <AppRoutes />

@@ -5,6 +5,8 @@ import XPPopup from './XPPopup';
 import LevelUpModal from './LevelUpModal';
 import BadgeEarnedToast from './BadgeEarnedToast';
 import ConfettiEffect from './ConfettiEffect';
+import GlassButton from '../GlassButton';
+import { MFlame, MGlowStar, MFlex, MCards, MStar, MStarEmpty } from '../MemozyEmoji';
 
 export interface DeckCompleteScreenProps {
   correct: number;
@@ -22,10 +24,10 @@ export interface DeckCompleteScreenProps {
 }
 
 const TIERS = [
-  { pct: 100, emoji: '🌟', title: 'FLAWLESS!',   color: '#fbbf24' },
-  { pct: 80,  emoji: '🔥', title: 'EXCELLENT!',  color: '#f97316' },
-  { pct: 60,  emoji: '💪', title: 'GREAT WORK!', color: '#22c55e' },
-  { pct: 0,   emoji: '📚', title: 'KEEP GOING!', color: '#6366f1' },
+  { pct: 100, icon: <MGlowStar size={56} />, title: 'FLAWLESS!',   color: '#fbbf24' },
+  { pct: 80,  icon: <MFlame size={56} />,    title: 'EXCELLENT!',  color: '#f97316' },
+  { pct: 60,  icon: <MFlex size={56} />,     title: 'GREAT WORK!', color: '#22c55e' },
+  { pct: 0,   icon: <MCards size={56} />,    title: 'KEEP GOING!', color: '#6366f1' },
 ];
 
 const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
@@ -88,9 +90,9 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
           <motion.div
             animate={{ rotate: [0, -12, 12, -6, 6, 0], scale: [1, 1.18, 1] }}
             transition={{ duration: 0.65, delay: 0.1 }}
-            style={{ fontSize: '3.5rem', lineHeight: 1, marginBottom: '0.4rem' }}
+            style={{ lineHeight: 1, marginBottom: '0.4rem' }}
           >
-            {tier.emoji}
+            {tier.icon}
           </motion.div>
           <div style={{
             fontSize: '2rem', fontWeight: 900, letterSpacing: '0.06em',
@@ -113,9 +115,9 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
                   : { scale: 0.25, opacity: 0.2 }
               }
               transition={{ type: 'spring', stiffness: 420, damping: 14, delay: starsShown >= i ? 0 : 0 }}
-              style={{ fontSize: '2.4rem' }}
+              style={{ lineHeight: 1 }}
             >
-              {starsShown >= i ? '⭐' : '☆'}
+              {starsShown >= i ? <MStar size={36} /> : <MStarEmpty size={36} />}
             </motion.div>
           ))}
         </div>
@@ -188,8 +190,8 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
                   background: '#fef3c722', border: '1px solid #fbbf2444',
                 }}
               >
-                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#f97316' }}>
-                  🔥 {streak}
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                  <MFlame size={22} /> {streak}
                 </div>
                 <div style={{ fontSize: '0.72rem', color: theme.textLight }}>day streak</div>
               </motion.div>
@@ -204,30 +206,12 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
           transition={{ delay: 0.45 }}
           style={{ display: 'flex', gap: '0.75rem' }}
         >
-          <button
-            onClick={onStudyAgain}
-            style={{
-              flex: 1, background: `${theme.primary}18`, color: theme.primary,
-              border: `1.5px solid ${theme.primary}44`, borderRadius: theme.borderRadius,
-              padding: '0.88rem', fontFamily: theme.font, fontWeight: 700,
-              fontSize: '0.95rem', cursor: 'pointer',
-            }}
-          >
+          <GlassButton variant="outline" onClick={onStudyAgain} style={{ flex: 1, padding: '0.88rem', fontSize: '0.95rem' }}>
             🔄 Study Again
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={onBack}
-            style={{
-              flex: 1, background: theme.primary, color: '#fff', border: 'none',
-              borderRadius: theme.borderRadius, padding: '0.88rem',
-              fontFamily: theme.font, fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer',
-              boxShadow: `0 4px 18px ${theme.primary}44`,
-            }}
-          >
+          </GlassButton>
+          <GlassButton onClick={onBack} style={{ flex: 1, padding: '0.88rem', fontSize: '0.95rem' }}>
             ← Back to Decks
-          </motion.button>
+          </GlassButton>
         </motion.div>
       </div>
     </>

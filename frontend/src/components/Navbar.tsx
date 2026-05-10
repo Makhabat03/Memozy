@@ -2,12 +2,15 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Home, PlusCircle, BookOpen, Users, User, Zap } from 'lucide-react';
+import { useAmbientSound } from '../hooks/useAmbientSound';
+import { Home, PlusCircle, BookOpen, Users, User, Volume2, VolumeX } from 'lucide-react';
+import GlassButton from './GlassButton';
 
 const Navbar: React.FC = () => {
   const { theme } = useTheme();
   const { signOut } = useAuth();
   const location = useLocation();
+  const { playing, toggle } = useAmbientSound();
 
   const links = [
     { to: '/', icon: <Home size={20} />, label: 'Home' },
@@ -19,6 +22,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav
+      className="glass-nav"
       style={{
         background: theme.card,
         borderBottom: `1px solid ${theme.primary}22`,
@@ -35,8 +39,7 @@ const Navbar: React.FC = () => {
       }}
     >
       <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Zap size={22} style={{ color: theme.primary }} />
-        <span style={{ fontWeight: 800, fontSize: '1.25rem', color: theme.primary }}>FlashAI</span>
+        <span style={{ fontWeight: 800, fontSize: '1.25rem', color: theme.primary }}>Memozy</span>
       </Link>
 
       <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -69,22 +72,21 @@ const Navbar: React.FC = () => {
         })}
       </div>
 
-      <button
-        onClick={signOut}
-        style={{
-          background: 'transparent',
-          border: `1px solid ${theme.primary}44`,
-          borderRadius: theme.borderRadius,
-          padding: '0.4rem 0.9rem',
-          color: theme.primary,
-          cursor: 'pointer',
-          fontFamily: theme.font,
-          fontSize: '0.85rem',
-          fontWeight: 600,
-        }}
-      >
-        Sign out
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <GlassButton
+          variant="outline"
+          size="sm"
+          onClick={toggle}
+          tintColor={playing ? theme.accent : theme.textLight}
+          title={playing ? 'Stop ambient sound' : 'Play ambient sound'}
+          style={{ padding: '0.5rem 0.65rem' }}
+        >
+          {playing ? <Volume2 size={16} /> : <VolumeX size={16} />}
+        </GlassButton>
+        <GlassButton variant="outline" size="sm" onClick={signOut}>
+          Sign out
+        </GlassButton>
+      </div>
     </nav>
   );
 };

@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { socialApi, Deck } from '../hooks/useApi';
 import { Search, UserPlus } from 'lucide-react';
+import GlassButton from '../components/GlassButton';
 
 const RANK_BADGES = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 
@@ -57,6 +58,7 @@ const Social: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.07 }}
+                  className="glass-card"
                   style={{
                     background: theme.card,
                     borderRadius: theme.borderRadius,
@@ -64,8 +66,8 @@ const Social: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    boxShadow: i === 0 ? `0 4px 16px ${theme.primary}33` : theme.shadow,
-                    border: i === 0 ? `2px solid ${theme.primary}` : `1px solid ${theme.primary}22`,
+                    boxShadow: i === 0 ? `0 4px 16px ${theme.primary}44` : theme.shadow,
+                    border: i === 0 ? `1.5px solid ${theme.primary}88` : `1px solid ${theme.primary}28`,
                   }}
                 >
                   <span style={{ fontSize: '1.25rem' }}>{RANK_BADGES[i]}</span>
@@ -99,19 +101,19 @@ const Social: React.FC = () => {
                 outline: 'none',
               }}
             />
-            <button onClick={handleSearch} style={{ background: theme.primary, border: 'none', borderRadius: theme.borderRadius, padding: '0.65rem 1rem', cursor: 'pointer', color: '#fff' }}>
+            <GlassButton onClick={handleSearch} size="sm" style={{ padding: '0.65rem 1rem' }}>
               <Search size={18} />
-            </button>
+            </GlassButton>
           </div>
           {searchResults.map((u: any) => (
-            <div key={u.id} style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', boxShadow: theme.shadow }}>
+            <div key={u.id} className="glass-card" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', boxShadow: theme.shadow, border: `1px solid ${theme.primary}28` }}>
               <div>
                 <div style={{ fontWeight: 700, color: theme.text }}>{u.username}</div>
                 <div style={{ fontSize: '0.8rem', color: theme.textLight }}>Level {u.level}</div>
               </div>
-              <button onClick={() => handleFollow(u.id)} style={{ background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.5rem 0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: theme.font, fontWeight: 700, fontSize: '0.85rem' }}>
+              <GlassButton onClick={() => handleFollow(u.id)} size="sm">
                 <UserPlus size={14} /> Follow
-              </button>
+              </GlassButton>
             </div>
           ))}
         </div>

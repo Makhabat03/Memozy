@@ -38,11 +38,11 @@ const AnimatedBackground: React.FC = () => {
     };
 
     const drawDarkFuturistic = () => {
-      ctx.fillStyle = '#050510';
+      ctx.fillStyle = '#000d0d';
       ctx.fillRect(0, 0, W, H);
 
       // Subtle grid
-      ctx.strokeStyle = 'rgba(0,229,255,0.04)';
+      ctx.strokeStyle = 'rgba(0,255,231,0.05)';
       ctx.lineWidth = 1;
       for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
       for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
@@ -50,14 +50,16 @@ const AnimatedBackground: React.FC = () => {
       const FOV = 500;
       const cx = W / 2, cy = H / 2;
 
-      const proj = particles.map(p => {
+      const proj = particles.map((p, i) => {
         p.x += p.vx; p.y += p.vy; p.z += p.vz;
         if (p.z < 50) p.vz = Math.abs(p.vz);
         if (p.z > 800) p.vz = -Math.abs(p.vz);
         if (Math.abs(p.x) > 800) p.vx *= -1;
         if (Math.abs(p.y) > 600) p.vy *= -1;
         const scale = FOV / (p.z + FOV);
-        return { px: cx + p.x * scale, py: cy + p.y * scale, scale };
+        // Every ~8th node is a magenta accent node
+        const accent = i % 8 === 0;
+        return { px: cx + p.x * scale, py: cy + p.y * scale, scale, accent };
       });
 
       // Lines between close nodes
@@ -68,8 +70,9 @@ const AnimatedBackground: React.FC = () => {
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < 140) {
             const a = (1 - d / 140) * 0.35;
+            const useMagenta = proj[i].accent || proj[j].accent;
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(0,229,255,${a})`;
+            ctx.strokeStyle = useMagenta ? `rgba(255,45,107,${a * 0.7})` : `rgba(0,255,231,${a})`;
             ctx.lineWidth = 0.6;
             ctx.moveTo(proj[i].px, proj[i].py);
             ctx.lineTo(proj[j].px, proj[j].py);
@@ -79,17 +82,18 @@ const AnimatedBackground: React.FC = () => {
       }
 
       // Nodes
-      proj.forEach(({ px, py, scale }) => {
+      proj.forEach(({ px, py, scale, accent }) => {
         const r = Math.max(0.5, scale * 3);
+        const [nr, ng, nb] = accent ? [255, 45, 107] : [0, 255, 231];
         // Glow
         const grd = ctx.createRadialGradient(px, py, 0, px, py, r * 5);
-        grd.addColorStop(0, `rgba(0,229,255,${0.2 * scale})`);
+        grd.addColorStop(0, `rgba(${nr},${ng},${nb},${0.22 * scale})`);
         grd.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.beginPath(); ctx.arc(px, py, r * 5, 0, Math.PI * 2);
         ctx.fillStyle = grd; ctx.fill();
         // Core
         ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,229,255,${0.5 + scale * 0.4})`; ctx.fill();
+        ctx.fillStyle = `rgba(${nr},${ng},${nb},${0.5 + scale * 0.4})`; ctx.fill();
       });
     };
 
@@ -106,7 +110,7 @@ const AnimatedBackground: React.FC = () => {
     };
 
     const drawCosmic = () => {
-      ctx.fillStyle = 'rgba(3,0,28,0.25)';
+      ctx.fillStyle = 'rgba(6,0,15,0.25)';
       ctx.fillRect(0, 0, W, H);
 
       const cx = W / 2, cy = H / 2;
@@ -128,16 +132,17 @@ const AnimatedBackground: React.FC = () => {
         ctx.moveTo(px, py);
         ctx.lineTo(sx, sy);
         ctx.lineWidth = size;
-        ctx.strokeStyle = p.hue === 280 ? `rgba(224,64,251,${bright * 0.8})`
-          : p.hue === 260 ? `rgba(124,77,255,${bright * 0.7})`
-          : `rgba(255,255,255,${bright})`;
+        // Lavender / warm gold / soft cream — matching the Cosmic palette
+        ctx.strokeStyle = p.hue === 280 ? `rgba(226,184,255,${bright * 0.9})`
+          : p.hue === 260 ? `rgba(251,191,36,${bright * 0.7})`
+          : `rgba(245,238,255,${bright})`;
         ctx.stroke();
       });
     };
 
     // ── NATURE ── 3D falling leaves ──
     const initNature = () => {
-      const colors = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#d4a017', '#588157', '#a7c957'];
+      const colors = ['#15803d', '#16a34a', '#4ade80', '#86efac', '#ca8a04', '#65a30d', '#bef264'];
       particles = Array.from({ length: 50 }, () => ({
         x: Math.random() * W,
         y: Math.random() * H,
@@ -181,134 +186,76 @@ const AnimatedBackground: React.FC = () => {
       });
     };
 
-    // ── ANIME ── cherry blossoms + sparkles ──
     const initAnime = () => {
-      const petalColors = ['#ffb7c5', '#ff80ab', '#fce4ec', '#f8bbd0', '#ffffff', '#f48fb1'];
+      const petalColors = ['#f9a8d4', '#f472b6', '#fce7f3', '#e879f9', '#fbcfe8', '#ffffff', '#ddd6fe'];
       particles = [
-        ...Array.from({ length: 55 }, () => ({
+        ...Array.from({ length: 60 }, () => ({
           type: 'petal',
           x: Math.random() * W,
           y: Math.random() * H,
-          vy: 0.3 + Math.random() * 1.0,
+          vy: 0.3 + Math.random() * 0.9,
           angle: Math.random() * Math.PI * 2,
-          angleV: (Math.random() - 0.5) * 0.03,
-          size: 4 + Math.random() * 9,
+          angleV: (Math.random() - 0.5) * 0.028,
+          size: 5 + Math.random() * 10,
           color: petalColors[Math.floor(Math.random() * petalColors.length)],
           phase: Math.random() * Math.PI * 2,
-          opacity: 0.4 + Math.random() * 0.5,
+          opacity: 0.35 + Math.random() * 0.45,
           z: Math.random(),
         })),
-        ...Array.from({ length: 35 }, () => ({
-          type: 'sparkle',
-          x: Math.random() * W,
-          y: Math.random() * H,
-          life: Math.random(),
-          maxLife: 60 + Math.random() * 120,
-          size: 2 + Math.random() * 5,
-          color: ['#ff80ab', '#fff', '#f8bbd0', '#e040fb', '#ffb7c5'][Math.floor(Math.random() * 5)],
+        ...Array.from({ length: 5 }, (_, i) => ({
+          type: 'orb',
+          x: W * (0.1 + i * 0.2),
+          y: H * (0.3 + Math.sin(i * 1.3) * 0.25),
+          r: 160 + Math.random() * 200,
+          color: ['rgba(249,168,212,0.18)', 'rgba(232,121,249,0.14)', 'rgba(251,207,232,0.2)', 'rgba(167,139,250,0.13)', 'rgba(244,114,182,0.16)'][i],
+          phase: Math.random() * Math.PI * 2,
         })),
       ];
     };
 
     const drawAnime = () => {
       ctx.clearRect(0, 0, W, H);
+
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0,   'rgba(253,230,245,0.65)');
+      sky.addColorStop(0.5, 'rgba(255,240,252,0.45)');
+      sky.addColorStop(1,   'rgba(255,248,254,0.25)');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
       particles.forEach(p => {
-        if (p.type === 'petal') {
+        if (p.type === 'orb') {
+          const ox = p.x + Math.sin(t * 0.0006 + p.phase) * 25;
+          const oy = p.y + Math.cos(t * 0.0005 + p.phase) * 18;
+          const grd = ctx.createRadialGradient(ox, oy, 0, ox, oy, p.r);
+          grd.addColorStop(0, p.color);
+          grd.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.beginPath(); ctx.arc(ox, oy, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = grd; ctx.fill();
+        } else {
           p.y += p.vy * (0.5 + p.z * 0.6);
-          p.x += Math.sin(t * 0.0007 + p.phase) * 1.4;
+          p.x += Math.sin(t * 0.0006 + p.phase) * 1.2;
           p.angle += p.angleV;
           if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; }
           ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
-          ctx.globalAlpha = p.opacity * (0.4 + p.z * 0.6);
+          ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+          ctx.globalAlpha = p.opacity * (0.5 + p.z * 0.5);
           ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, p.size * 0.45, p.size, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-          ctx.globalAlpha = 1;
-        } else {
-          p.life += 1;
-          if (p.life > p.maxLife) { p.life = 0; p.x = Math.random() * W; p.y = Math.random() * H; }
-          const prog = p.life / p.maxLife;
-          const alpha = Math.sin(prog * Math.PI) * 0.9;
-          const s = p.size * Math.sin(prog * Math.PI);
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.globalAlpha = alpha;
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 1.2;
-          [0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4].forEach(a => {
+          for (let i = 0; i < 5; i++) {
+            const a = (i / 5) * Math.PI * 2;
             ctx.beginPath();
-            ctx.moveTo(Math.cos(a) * s * 0.3, Math.sin(a) * s * 0.3);
-            ctx.lineTo(Math.cos(a) * s, Math.sin(a) * s);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(-Math.cos(a) * s * 0.3, -Math.sin(a) * s * 0.3);
-            ctx.lineTo(-Math.cos(a) * s, -Math.sin(a) * s);
-            ctx.stroke();
-          });
-          ctx.restore();
-          ctx.globalAlpha = 1;
+            ctx.ellipse(Math.cos(a) * p.size * 0.5, Math.sin(a) * p.size * 0.5, p.size * 0.38, p.size * 0.22, a, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.beginPath(); ctx.arc(0, 0, p.size * 0.1, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,200,220,0.9)'; ctx.fill();
+          ctx.restore(); ctx.globalAlpha = 1;
         }
       });
     };
 
-    // ── OCEAN ── 3D rising bubbles ──
-    const initOcean = () => {
-      particles = Array.from({ length: 65 }, () => ({
-        x: Math.random() * W,
-        y: H + Math.random() * H,
-        z: Math.random(),
-        vy: 0.3 + Math.random() * 1.0,
-        size: 4 + Math.random() * 18,
-        phase: Math.random() * Math.PI * 2,
-        opacity: 0.08 + Math.random() * 0.22,
-      }));
-    };
-
-    const drawOcean = () => {
-      ctx.fillStyle = '#03045e';
-      ctx.fillRect(0, 0, W, H);
-
-      // Caustic light beams
-      ctx.save();
-      for (let i = 0; i < 5; i++) {
-        const bx = (W * (i + 0.5)) / 5 + Math.sin(t * 0.003 + i) * 40;
-        const grd = ctx.createLinearGradient(bx, 0, bx, H);
-        grd.addColorStop(0, 'rgba(72,202,228,0.04)');
-        grd.addColorStop(0.5, 'rgba(72,202,228,0.01)');
-        grd.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.moveTo(bx - 30, 0); ctx.lineTo(bx + 30, 0);
-        ctx.lineTo(bx + 80, H); ctx.lineTo(bx - 80, H);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      particles.forEach(p => {
-        p.y -= p.vy * (0.4 + p.z * 0.7);
-        p.x += Math.sin(t * 0.0008 + p.phase) * 0.7;
-        if (p.y < -p.size * 3) { p.y = H + p.size; p.x = Math.random() * W; }
-
-        const r = p.size * (0.3 + p.z * 0.8);
-        ctx.save();
-        ctx.globalAlpha = p.opacity * (0.3 + p.z * 0.7);
-        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx.strokeStyle = '#90e0ef'; ctx.lineWidth = 0.8; ctx.stroke();
-        // Highlight
-        ctx.beginPath(); ctx.arc(p.x - r * 0.28, p.y - r * 0.28, r * 0.22, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill();
-        ctx.restore();
-        ctx.globalAlpha = 1;
-      });
-    };
-
-    // ── MINIMAL / CUTE ── very subtle floating orbs ──
+    // ── MINIMAL ── very subtle floating orbs ──
     const initSubtle = () => {
-      const color = themeName === 'cute' ? '#f472b6' : '#6366f1';
+      const color = '#6366f1';
       particles = Array.from({ length: 20 }, () => ({
         x: Math.random() * W, y: Math.random() * H,
         vx: (Math.random() - 0.5) * 0.25,
@@ -335,7 +282,6 @@ const AnimatedBackground: React.FC = () => {
         case 'cosmic': initCosmic(); break;
         case 'nature': initNature(); break;
         case 'anime': initAnime(); break;
-        case 'ocean': initOcean(); break;
         default: initSubtle(); break;
       }
     };
@@ -347,7 +293,6 @@ const AnimatedBackground: React.FC = () => {
         case 'cosmic': drawCosmic(); break;
         case 'nature': drawNature(); break;
         case 'anime': drawAnime(); break;
-        case 'ocean': drawOcean(); break;
         default: drawSubtle(); break;
       }
       animId = requestAnimationFrame(animate);

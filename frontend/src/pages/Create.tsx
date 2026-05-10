@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { cardsApi, decksApi, Card } from '../hooks/useApi';
 import { FileText, Image, File, Loader } from 'lucide-react';
+import GlassButton from '../components/GlassButton';
 
 type Tab = 'text' | 'pdf' | 'image';
 
@@ -96,12 +97,12 @@ const Create: React.FC = () => {
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
           <h2 style={{ color: theme.primary, fontWeight: 900 }}>Deck Created!</h2>
           <p style={{ color: theme.textLight }}>{editingCards.length} cards saved to "{title}"</p>
-          <button
+          <GlassButton
             onClick={() => { setSaved(false); setGeneratedCards([]); setTitle(''); setText(''); setFile(null); }}
-            style={{ marginTop: '1.5rem', background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.75rem 2rem', fontFamily: theme.font, fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
+            style={{ marginTop: '1.5rem' }}
           >
             Create Another
-          </button>
+          </GlassButton>
         </motion.div>
       </div>
     );
@@ -149,20 +150,12 @@ const Create: React.FC = () => {
           ))}
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            onClick={() => setGeneratedCards([])}
-            style={{ flex: 1, background: 'transparent', border: `1px solid ${theme.primary}44`, borderRadius: theme.borderRadius, padding: '0.75rem', fontFamily: theme.font, fontWeight: 700, color: theme.primary, cursor: 'pointer' }}
-          >
+          <GlassButton variant="outline" onClick={() => setGeneratedCards([])} style={{ flex: 1 }}>
             Back
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSave}
-            style={{ flex: 2, background: theme.primary, color: '#fff', border: 'none', borderRadius: theme.borderRadius, padding: '0.75rem', fontFamily: theme.font, fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
-          >
+          </GlassButton>
+          <GlassButton onClick={handleSave} style={{ flex: 2 }}>
             Save {editingCards.length} Cards ✓
-          </motion.button>
+          </GlassButton>
         </div>
       </div>
     );
@@ -179,9 +172,9 @@ const Create: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: `${theme.primary}11`, borderRadius: theme.borderRadius, padding: '0.35rem' }}>
         {([['text', 'Text', FileText], ['pdf', 'PDF', File], ['image', 'Image', Image]] as [Tab, string, any][]).map(([t, label, Icon]) => (
-          <button key={t} onClick={() => setTab(t)} style={{ ...tabStyle(tab === t), flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+          <GlassButton key={t} onClick={() => setTab(t)} variant={tab === t ? 'primary' : 'outline'} size="sm" style={{ flex: 1 }}>
             <Icon size={15} /> {label}
-          </button>
+          </GlassButton>
         ))}
       </div>
 
@@ -250,29 +243,7 @@ const Create: React.FC = () => {
 
       {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}
 
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleGenerate}
-        disabled={loading}
-        style={{
-          width: '100%',
-          background: theme.primary,
-          color: '#fff',
-          border: 'none',
-          borderRadius: theme.borderRadius,
-          padding: '0.9rem',
-          fontFamily: theme.font,
-          fontWeight: 800,
-          fontSize: '1.05rem',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.5rem',
-        }}
-      >
+      <GlassButton onClick={handleGenerate} loading={loading} fullWidth size="lg">
         {loading ? (
           <>
             <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8 }}>
@@ -283,7 +254,7 @@ const Create: React.FC = () => {
         ) : (
           '⚡ Generate Flashcards'
         )}
-      </motion.button>
+      </GlassButton>
     </div>
   );
 };
