@@ -3,14 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useAmbientSound } from '../hooks/useAmbientSound';
-import { Home, PlusCircle, BookOpen, Users, User, Volume2, VolumeX } from 'lucide-react';
+import { Home, PlusCircle, BookOpen, Users, User, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import GlassButton from './GlassButton';
+import { useTour } from '../context/TourContext';
 
 const Navbar: React.FC = () => {
   const { theme } = useTheme();
   const { signOut } = useAuth();
   const location = useLocation();
   const { playing, toggle } = useAmbientSound();
+  const { startTour } = useTour();
 
   const links = [
     { to: '/', icon: <Home size={20} />, label: 'Home' },
@@ -73,6 +75,15 @@ const Navbar: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <GlassButton
+          variant="outline"
+          size="sm"
+          onClick={startTour}
+          title="Replay walkthrough"
+          style={{ padding: '0.5rem 0.65rem' }}
+        >
+          <HelpCircle size={16} />
+        </GlassButton>
         <GlassButton
           variant="outline"
           size="sm"

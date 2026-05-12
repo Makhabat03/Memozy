@@ -44,7 +44,7 @@ const Social: React.FC = () => {
       <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, marginBottom: '2rem' }}>Social</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-        <div>
+        <div data-tour="social-leaderboard">
           <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>🏆 Weekly Leaderboard</h2>
           {leaderboard.length === 0 ? (
             <div style={{ color: theme.textLight, fontSize: '0.9rem', padding: '1rem', background: theme.card, borderRadius: theme.borderRadius }}>
@@ -82,7 +82,7 @@ const Social: React.FC = () => {
           )}
         </div>
 
-        <div>
+        <div data-tour="social-search">
           <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>🔍 Find People</h2>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
             <input
@@ -119,7 +119,7 @@ const Social: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ marginTop: '2.5rem' }}>
+      <div data-tour="social-feed" style={{ marginTop: '2.5rem' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>📚 Friends' Public Decks</h2>
         {feed.length === 0 ? (
           <div style={{ color: theme.textLight, fontSize: '0.9rem', padding: '1.5rem', background: theme.card, borderRadius: theme.borderRadius, textAlign: 'center' }}>

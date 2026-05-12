@@ -92,6 +92,7 @@ const ProfilePage: React.FC = () => {
 
       {/* User info + XP */}
       <motion.div
+        data-tour="profile-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '2rem', marginBottom: '1.5rem', boxShadow: theme.shadow, textAlign: 'center' }}
@@ -109,6 +110,7 @@ const ProfilePage: React.FC = () => {
 
       {/* Streak Hero */}
       <motion.div
+        data-tour="profile-streak-section"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
@@ -221,7 +223,7 @@ const ProfilePage: React.FC = () => {
       </motion.div>
 
       {/* 90-Day Activity */}
-      <div style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+      <div data-tour="profile-activity" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontWeight: 800, color: theme.text, margin: 0 }}>90-Day Activity</h3>
           <span style={{ fontSize: '0.78rem', color: theme.textLight }}>{totalDays} active days</span>
@@ -263,7 +265,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Badges */}
-      <div style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+      <div data-tour="profile-badges" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
         <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>Badges</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
           {ALL_BADGES.map(({ type, icon, label }) => {
@@ -290,7 +292,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Theme */}
-      <div style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', boxShadow: theme.shadow }}>
+      <div data-tour="theme-picker" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', boxShadow: theme.shadow }}>
         <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>Theme</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.6rem' }}>
           {(Object.values(themes) as Theme[]).map((t) => (

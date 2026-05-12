@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
     >
       {/* Header */}
       <motion.div variants={itemVariants} style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <div data-tour="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               Hey, {profile?.username || 'there'}! <MWave size={28} />
@@ -76,11 +76,13 @@ const Dashboard: React.FC = () => {
               Level {profile?.level || 1} · {profile?.xp || 0} XP
             </p>
           </div>
-          <StreakFlame streak={profile?.streak_count || 0} size="md" />
+          <div data-tour="streak-display">
+            <StreakFlame streak={profile?.streak_count || 0} size="md" />
+          </div>
         </div>
 
         {/* XP bar */}
-        <div style={{ marginTop: '1rem', background: `${theme.primary}22`, borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
+        <div data-tour="xp-bar" style={{ marginTop: '1rem', background: `${theme.primary}22`, borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress * 100}%` }}
@@ -99,14 +101,17 @@ const Dashboard: React.FC = () => {
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}
       >
         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: theme.text, margin: 0 }}>Your Decks</h2>
-        <Link to="/create">
-          <GlassButton size="sm">
-            <PlusCircle size={16} /> New Deck
-          </GlassButton>
-        </Link>
+        <div data-tour="new-deck-btn">
+          <Link to="/create">
+            <GlassButton size="sm">
+              <PlusCircle size={16} /> New Deck
+            </GlassButton>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Deck grid */}
+      <div data-tour="decks-grid">
       <AnimatePresence mode="wait">
         {decks.length === 0 ? (
           <motion.div
@@ -192,6 +197,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </motion.div>
   );
 };

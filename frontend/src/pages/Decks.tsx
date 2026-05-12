@@ -40,7 +40,7 @@ const Decks: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem', fontFamily: theme.font }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div data-tour="decks-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, margin: 0 }}>My Decks</h1>
         <Link to="/create">
           <GlassButton size="sm">+ New Deck</GlassButton>
@@ -77,7 +77,7 @@ const Decks: React.FC = () => {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div data-tour={i === 0 ? 'decks-actions' : undefined} style={{ display: 'flex', gap: '0.5rem' }}>
                 <Link to={`/study/${deck.id}`} style={{ flex: 1, textDecoration: 'none' }}>
                   <GlassButton fullWidth size="sm">Study</GlassButton>
                 </Link>

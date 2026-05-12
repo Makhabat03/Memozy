@@ -165,12 +165,12 @@ const Create: React.FC = () => {
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1rem', fontFamily: theme.font }}>
       <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, marginBottom: '1.5rem' }}>Create Flashcards</h1>
 
-      <div style={{ marginBottom: '1.25rem' }}>
+      <div data-tour="create-title" style={{ marginBottom: '1.25rem' }}>
         <label style={{ fontWeight: 700, color: theme.text, display: 'block', marginBottom: '0.5rem' }}>Deck Title</label>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Biology Chapter 3" />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: `${theme.primary}11`, borderRadius: theme.borderRadius, padding: '0.35rem' }}>
+      <div data-tour="create-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: `${theme.primary}11`, borderRadius: theme.borderRadius, padding: '0.35rem' }}>
         {([['text', 'Text', FileText], ['pdf', 'PDF', File], ['image', 'Image', Image]] as [Tab, string, any][]).map(([t, label, Icon]) => (
           <GlassButton key={t} onClick={() => setTab(t)} variant={tab === t ? 'primary' : 'outline'} size="sm" style={{ flex: 1 }}>
             <Icon size={15} /> {label}
@@ -180,6 +180,7 @@ const Create: React.FC = () => {
 
       {tab === 'text' && (
         <textarea
+          data-tour="create-input"
           style={{ ...inputStyle, minHeight: '180px', resize: 'vertical', marginBottom: '1.25rem' }}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -224,7 +225,7 @@ const Create: React.FC = () => {
         </div>
       )}
 
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div data-tour="create-num-cards" style={{ marginBottom: '1.5rem' }}>
         <label style={{ fontWeight: 700, color: theme.text, display: 'block', marginBottom: '0.5rem' }}>
           Number of Cards: {numCards}
         </label>
@@ -243,6 +244,7 @@ const Create: React.FC = () => {
 
       {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}
 
+      <div data-tour="create-generate-btn">
       <GlassButton onClick={handleGenerate} loading={loading} fullWidth size="lg">
         {loading ? (
           <>
@@ -255,6 +257,7 @@ const Create: React.FC = () => {
           '⚡ Generate Flashcards'
         )}
       </GlassButton>
+      </div>
     </div>
   );
 };

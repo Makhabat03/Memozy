@@ -7,7 +7,8 @@ import CursorEffect from './components/CursorEffect';
 import Navbar from './components/Navbar';
 import FirstLaunch from './pages/FirstLaunch';
 import Auth from './pages/Auth';
-import OnboardingTour from './components/OnboardingTour';
+import TourOverlay from './components/TourOverlay';
+import { TourProvider, useTour } from './context/TourContext';
 import Dashboard from './pages/Dashboard';
 import Create from './pages/Create';
 import Study from './pages/Study';
@@ -15,13 +16,21 @@ import Decks from './pages/Decks';
 import Social from './pages/Social';
 import ProfilePage from './pages/Profile';
 
-const hasLaunched   = () => !!localStorage.getItem('memozy_launched');
-const hasOnboarded  = () => !!localStorage.getItem('memozy_onboarded');
+const hasLaunched  = () => !!localStorage.getItem('memozy_launched');
+const hasOnboarded = () => !!localStorage.getItem('memozy_onboarded');
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
-  const [launched,   setLaunched]   = React.useState(hasLaunched);
-  const [onboarded,  setOnboarded]  = React.useState(hasOnboarded);
+  const { startTour }     = useTour();
+  const [launched, setLaunched] = React.useState(hasLaunched);
+
+  // Auto-start tour on first sign-in
+  React.useEffect(() => {
+    if (user && !hasOnboarded()) {
+      const t = setTimeout(startTour, 900);
+      return () => clearTimeout(t);
+    }
+  }, [user]); // eslint-disable-line
 
   if (loading) {
     return (
@@ -42,7 +51,7 @@ const AppRoutes: React.FC = () => {
   return (
     <>
       <Navbar />
-      {!onboarded && <OnboardingTour onComplete={() => setOnboarded(true)} />}
+      <TourOverlay />
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/create" element={<Create />} />
@@ -60,6 +69,7 @@ const App: React.FC = () => (
   <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
+        <TourProvider>
         {/* Animated background behind everything */}
         <AnimatedBackground />
         <CursorEffect />
@@ -67,6 +77,7 @@ const App: React.FC = () => (
         <div style={{ position: 'relative', zIndex: 1 }}>
           <AppRoutes />
         </div>
+        </TourProvider>
       </BrowserRouter>
     </AuthProvider>
   </ThemeProvider>
