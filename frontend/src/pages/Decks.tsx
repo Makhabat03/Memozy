@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { decksApi, Deck } from '../hooks/useApi';
-import { Share2, BookOpen, Trash2 } from 'lucide-react';
+import { Link2, BookOpen, Trash2, Globe, Lock } from 'lucide-react';
 import GlassButton from '../components/GlassButton';
 
 const Decks: React.FC = () => {
@@ -22,12 +22,17 @@ const Decks: React.FC = () => {
     });
   }, [user]);
 
-  const handleShare = async (deck: Deck) => {
-    await decksApi.share(deck.id);
+  const handleCopyLink = (deck: Deck) => {
     const url = `${window.location.origin}/decks/public/${deck.id}`;
     navigator.clipboard.writeText(url);
     setCopied(deck.id);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleToggleVisibility = async (deck: Deck) => {
+    const newValue = !deck.is_public;
+    await decksApi.setVisibility(deck.id, newValue);
+    setDecks(prev => prev.map(d => d.id === deck.id ? { ...d, is_public: newValue } : d));
   };
 
   const handleDelete = async (deckId: string) => {
@@ -70,11 +75,40 @@ const Decks: React.FC = () => {
                 <span style={{ background: `${theme.secondary}22`, color: theme.secondary, borderRadius: '999px', padding: '0.2rem 0.75rem', fontSize: '0.8rem', fontWeight: 700 }}>
                   {deck.card_count} cards
                 </span>
-                {deck.is_public && (
-                  <span style={{ background: `${theme.accent}22`, color: theme.accent, borderRadius: '999px', padding: '0.2rem 0.75rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                    Public
+              </div>
+
+              {/* Visibility toggle row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: `${theme.primary}0d`, borderRadius: '10px',
+                padding: '0.5rem 0.75rem', marginBottom: '0.75rem',
+                border: `1px solid ${theme.primary}18`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
+                  {deck.is_public
+                    ? <Globe size={13} style={{ color: theme.primary }} />
+                    : <Lock size={13} style={{ color: theme.textLight }} />}
+                  <span style={{ color: deck.is_public ? theme.primary : theme.textLight, fontWeight: 700 }}>
+                    {deck.is_public ? 'Public' : 'Private'}
                   </span>
-                )}
+                  <span style={{ color: theme.textLight, fontSize: '0.72rem' }}>
+                    — {deck.is_public ? 'in social feed' : 'link only'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleToggleVisibility(deck)}
+                  style={{
+                    width: 36, height: 20, borderRadius: 999, border: 'none', cursor: 'pointer',
+                    background: deck.is_public ? theme.primary : `${theme.primary}33`,
+                    position: 'relative', transition: 'background 0.22s', flexShrink: 0,
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 2, left: deck.is_public ? 18 : 2,
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    transition: 'left 0.22s', boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                  }} />
+                </button>
               </div>
 
               <div data-tour={i === 0 ? 'decks-actions' : undefined} style={{ display: 'flex', gap: '0.5rem' }}>
@@ -82,14 +116,14 @@ const Decks: React.FC = () => {
                   <GlassButton fullWidth size="sm">Study</GlassButton>
                 </Link>
                 <GlassButton
-                  onClick={() => handleShare(deck)}
-                  title="Share"
+                  onClick={() => handleCopyLink(deck)}
+                  title="Copy share link"
                   variant="outline"
                   size="sm"
                   tintColor={copied === deck.id ? theme.accent : theme.primary}
                   style={{ padding: '0.6rem 0.75rem' }}
                 >
-                  <Share2 size={16} />
+                  <Link2 size={16} />
                 </GlassButton>
                 <GlassButton
                   onClick={() => handleDelete(deck.id)}
@@ -101,7 +135,14 @@ const Decks: React.FC = () => {
                   <Trash2 size={16} />
                 </GlassButton>
               </div>
-              {copied === deck.id && <div style={{ fontSize: '0.8rem', color: theme.accent, marginTop: '0.5rem', textAlign: 'center' }}>Link copied! ✓</div>}
+              {copied === deck.id && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  style={{ fontSize: '0.78rem', color: theme.accent, marginTop: '0.5rem', textAlign: 'center', fontWeight: 700 }}
+                >
+                  Link copied! ✓
+                </motion.div>
+              )}
             </motion.div>
           ))}
         </div>

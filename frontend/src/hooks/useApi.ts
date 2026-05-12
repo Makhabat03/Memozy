@@ -66,7 +66,7 @@ export const decksApi = {
   get: (id: string) => api.get<{ deck: Deck }>(`/decks/${id}`),
   update: (id: string, data: Partial<Deck>) => api.put<{ deck: Deck }>(`/decks/${id}`, data),
   delete: (id: string) => api.delete(`/decks/${id}`),
-  share: (id: string) => api.post<{ share_url: string }>(`/decks/${id}/share`),
+  setVisibility: (id: string, isPublic: boolean) => api.put<{ deck: Deck }>(`/decks/${id}`, { is_public: isPublic }),
   getPublic: (id: string) => api.get<{ deck: Deck }>(`/decks/public/${id}`),
 };
 

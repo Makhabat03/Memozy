@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { cardsApi, decksApi, Card } from '../hooks/useApi';
-import { FileText, Image, File, Loader } from 'lucide-react';
+import { FileText, Image, File, Loader, Globe, Lock } from 'lucide-react';
 import GlassButton from '../components/GlassButton';
 
 type Tab = 'text' | 'pdf' | 'image';
@@ -15,6 +15,7 @@ const Create: React.FC = () => {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [numCards, setNumCards] = useState(10);
+  const [isPublic, setIsPublic] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +32,7 @@ const Create: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const deckRes = await decksApi.create({ user_id: user.id, title, description: '' });
+      const deckRes = await decksApi.create({ user_id: user.id, title, description: '', is_public: isPublic });
       const deckId = deckRes.data.deck.id;
 
       let cards: Card[] = [];
@@ -240,6 +241,43 @@ const Create: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: theme.textLight }}>
           <span>5</span><span>30</span>
         </div>
+      </div>
+
+      {/* Visibility toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: `${theme.primary}0d`, borderRadius: theme.borderRadius,
+        padding: '0.85rem 1rem', marginBottom: '1.25rem',
+        border: `1px solid ${theme.primary}22`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          {isPublic
+            ? <Globe size={18} style={{ color: theme.primary }} />
+            : <Lock size={18} style={{ color: theme.textLight }} />}
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: theme.text }}>
+              {isPublic ? 'Public' : 'Private'}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: theme.textLight }}>
+              {isPublic ? 'Visible in the social feed' : 'Only accessible via share link'}
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsPublic(v => !v)}
+          style={{
+            width: 44, height: 24, borderRadius: 999, border: 'none', cursor: 'pointer',
+            background: isPublic ? theme.primary : `${theme.primary}33`,
+            position: 'relative', transition: 'background 0.25s', flexShrink: 0,
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: 3, left: isPublic ? 23 : 3,
+            width: 18, height: 18, borderRadius: '50%', background: '#fff',
+            transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+          }} />
+        </button>
       </div>
 
       {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}

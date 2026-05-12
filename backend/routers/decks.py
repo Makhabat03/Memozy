@@ -70,21 +70,13 @@ async def delete_deck(deck_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/{deck_id}/share")
-async def share_deck(deck_id: str):
-    try:
-        sb = get_supabase()
-        sb.table("decks").update({"is_public": True}).eq("id", deck_id).execute()
-        return {"share_url": f"/decks/public/{deck_id}"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/public/{deck_id}")
 async def get_public_deck(deck_id: str):
+    # Accessible to anyone with the link, regardless of is_public flag.
+    # is_public only controls social-feed visibility.
     try:
         sb = get_supabase()
-        result = sb.table("decks").select("*, cards(*)").eq("id", deck_id).eq("is_public", True).single().execute()
+        result = sb.table("decks").select("*, cards(*)").eq("id", deck_id).single().execute()
         return {"deck": result.data}
     except Exception as e:
-        raise HTTPException(status_code=404, detail="Deck not found or not public")
+        raise HTTPException(status_code=404, detail="Deck not found")
