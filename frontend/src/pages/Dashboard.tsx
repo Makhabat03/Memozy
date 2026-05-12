@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
               Level {profile?.level || 1} · {profile?.xp || 0} XP
             </p>
           </div>
-          <StreakFlame streak={profile?.streak_count || 0} />
+          <StreakFlame streak={profile?.streak_count || 0} size="md" />
         </div>
 
         {/* XP bar */}

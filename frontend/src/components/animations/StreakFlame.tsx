@@ -4,7 +4,7 @@ import { MFlame } from '../MemozyEmoji';
 
 interface StreakFlameProps {
   streak: number;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const MILESTONES = [7, 30, 60, 100, 365];
@@ -128,19 +128,23 @@ const StreakFlame: React.FC<StreakFlameProps> = ({ streak, size = 'sm' }) => {
     );
   }
 
-  /* ── Small inline (Dashboard header) ──────────────────────────────── */
+  /* ── Small / Medium inline (Dashboard header) ─────────────────────── */
   if (!alive) return null;
 
+  const flameSize  = size === 'md' ? 38 : 22;
+  const fontSize   = size === 'md' ? '1.5rem' : '1rem';
+  const gap        = size === 'md' ? '0.4rem' : '0.3rem';
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap }}>
       <motion.div
         animate={flicker}
         transition={{ ...flickerT, duration: 0.65 }}
         style={{ display: 'flex', alignItems: 'center', transformOrigin: 'bottom center' }}
       >
-        <MFlame size={22} />
+        <MFlame size={flameSize} />
       </motion.div>
-      <span style={{ fontWeight: 800, fontSize: '1rem', color: '#f97316' }}>{streak}</span>
+      <span style={{ fontWeight: 800, fontSize, color: '#f97316' }}>{streak}</span>
     </div>
   );
 };
