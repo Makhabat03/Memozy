@@ -5,15 +5,9 @@ import { MSparkle, MThumbUp, MHardFace, MBurst, MBolt, MFlame } from '../MemozyE
 
 export interface RatingFeedbackProps {
   rating: 'easy' | 'good' | 'hard' | null;
-  ratingKey: number; // increment to re-trigger
+  ratingKey: number;
   combo: number;
 }
-
-const RATING_CFG = {
-  easy: { icon: <MSparkle size={38} />,   text: 'EASY!', color: '#22c55e' },
-  good: { icon: <MThumbUp size={38} />,   text: 'GOOD!', color: '#6366f1' },
-  hard: { icon: <MHardFace size={38} />,  text: 'HARD',  color: '#ef4444' },
-};
 
 const COMBO_TIERS = [
   { min: 8, icon: <MBurst size={30} />, label: 'UNSTOPPABLE!' },
@@ -22,7 +16,14 @@ const COMBO_TIERS = [
 ];
 
 const RatingFeedback: React.FC<RatingFeedbackProps> = ({ rating, ratingKey, combo }) => {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
+  const isDark = themeName === 'darkFuturistic' || themeName === 'cosmic';
+
+  const RATING_CFG = {
+    easy: { icon: <MSparkle size={38} />, text: 'EASY!', color: isDark ? '#4ade80'  : '#22c55e' },
+    good: { icon: <MThumbUp size={38} />, text: 'GOOD!', color: isDark ? theme.primary : '#6366f1' },
+    hard: { icon: <MHardFace size={38} />, text: 'HARD', color: isDark ? '#ff6b8a'  : '#ef4444' },
+  };
   const [showRating, setShowRating] = useState(false);
   const [showCombo,  setShowCombo]  = useState(false);
   const prevComboRef = useRef(0);
@@ -32,7 +33,7 @@ const RatingFeedback: React.FC<RatingFeedbackProps> = ({ rating, ratingKey, comb
     setShowRating(true);
     const t = setTimeout(() => setShowRating(false), 640);
     return () => clearTimeout(t);
-  }, [ratingKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ratingKey]); // eslint-disable-line
 
   useEffect(() => {
     if (combo >= 3 && combo > prevComboRef.current) {

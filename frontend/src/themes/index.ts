@@ -1,4 +1,4 @@
-export type ThemeName = 'minimal' | 'darkFuturistic' | 'nature' | 'anime' | 'cosmic';
+export type ThemeName = 'minimal' | 'darkFuturistic' | 'nature' | 'pink' | 'cosmic';
 
 export interface Theme {
   name: ThemeName;
@@ -69,10 +69,10 @@ export const themes: Record<ThemeName, Theme> = {
   },
 
   // Sakura light — soft pinks and lavender, cherry blossom vibes
-  anime: {
-    name: 'anime',
-    label: 'Anime',
-    emoji: '⛩️',
+  pink: {
+    name: 'pink',
+    label: 'Pink',
+    emoji: '🌸',
     primary: '#e91e8c',
     secondary: '#9c27b0',
     accent: '#ff6b6b',

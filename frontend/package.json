@@ -21,6 +21,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build"
   },
+  "eslintConfig": {
+    "extends": ["react-app"]
+  },
   "browserslist": {
     "production": [
       ">0.2%",

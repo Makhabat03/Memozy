@@ -191,7 +191,7 @@ const OVERRIDES: Partial<Record<ThemeName, Partial<Palette>>> = {
     },
   },
 
-  anime: {
+  pink: {
     waterDrop: (ctx) => sw(ctx, 1600, 700, 0.12, 'sine', 0.3),
     correct: (ctx) => {
       t(ctx, 880, 0.08, 'sine', 0.28, 0);

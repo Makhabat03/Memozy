@@ -82,7 +82,7 @@ const CardFlipParticles: React.FC<Props> = ({ trigger }) => {
 
     animRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animRef.current);
-  }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [trigger]); // eslint-disable-line
 
   return (
     <canvas

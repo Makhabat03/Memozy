@@ -9,23 +9,23 @@ import { PlusCircle, BookOpen } from 'lucide-react';
 import GlassButton from '../components/GlassButton';
 import { MSparkle, MWave } from '../components/MemozyEmoji';
 
-const spring = { type: 'spring', stiffness: 260, damping: 28 };
-const gentleSpring = { type: 'spring', stiffness: 180, damping: 24 };
+const spring = { type: 'spring' as const, stiffness: 260, damping: 28 };
+const gentleSpring = { type: 'spring' as const, stiffness: 180, damping: 24 };
 
 const containerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-};
+} as any;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: gentleSpring },
-};
+} as any;
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.97 },
   visible: { opacity: 1, y: 0, scale: 1, transition: gentleSpring },
-};
+} as any;
 
 const Dashboard: React.FC = () => {
   const { theme } = useTheme();

@@ -97,46 +97,122 @@ const AnimatedBackground: React.FC = () => {
       });
     };
 
-    // ── COSMIC STARFIELD ── warp-speed stars ──
+    // ── COSMIC ── nebulae + warp stars + twinkling field ──
     const initCosmic = () => {
-      particles = Array.from({ length: 220 }, () => ({
-        x: (Math.random() - 0.5) * W * 4,
-        y: (Math.random() - 0.5) * H * 4,
-        z: Math.random() * 1200,
-        pz: 0,
-        hue: Math.random() > 0.7 ? 280 : Math.random() > 0.5 ? 260 : 0,
-      }));
-      particles.forEach(p => { p.pz = p.z; });
+      const nebulaColors = [
+        [226, 184, 255], // lavender
+        [251, 191,  36], // gold
+        [244, 114, 182], // pink
+        [167, 139, 250], // indigo
+        [196, 163, 255], // soft purple
+      ];
+      particles = [
+        // Nebula clouds — large drifting glow blobs
+        ...Array.from({ length: 5 }, (_, i) => ({
+          type: 'nebula',
+          x: W * [0.15, 0.72, 0.42, 0.88, 0.28][i],
+          y: H * [0.28, 0.62, 0.82, 0.18, 0.68][i],
+          r: 180 + i * 55,
+          rgb: nebulaColors[i],
+          alpha: 0.05 + i * 0.007,
+          vx: (Math.random() - 0.5) * 0.12,
+          vy: (Math.random() - 0.5) * 0.08,
+        })),
+        // Twinkling static stars
+        ...Array.from({ length: 80 }, () => ({
+          type: 'twinkle',
+          x: Math.random() * W,
+          y: Math.random() * H,
+          size: 0.6 + Math.random() * 2,
+          baseAlpha: 0.45 + Math.random() * 0.55,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.007 + Math.random() * 0.016,
+          hue: Math.random() > 0.6 ? 280 : Math.random() > 0.5 ? 260 : 0,
+        })),
+        // Warp-speed stars
+        ...Array.from({ length: 280 }, () => {
+          const z = Math.random() * 1200;
+          return {
+            type: 'warp',
+            x: (Math.random() - 0.5) * W * 4,
+            y: (Math.random() - 0.5) * H * 4,
+            z, pz: z,
+            hue: Math.random() > 0.65 ? 280 : Math.random() > 0.5 ? 260 : 0,
+          };
+        }),
+      ];
     };
 
     const drawCosmic = () => {
-      ctx.fillStyle = 'rgba(6,0,15,0.25)';
+      ctx.fillStyle = 'rgba(6,0,15,0.17)';
       ctx.fillRect(0, 0, W, H);
 
       const cx = W / 2, cy = H / 2;
+
       particles.forEach(p => {
-        p.pz = p.z;
-        p.z -= 4;
-        if (p.z <= 1) { p.x = (Math.random() - 0.5) * W * 4; p.y = (Math.random() - 0.5) * H * 4; p.z = 1200; p.pz = p.z; }
+        if (p.type === 'nebula') {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -p.r) p.x = W + p.r;
+          if (p.x > W + p.r) p.x = -p.r;
+          if (p.y < -p.r) p.y = H + p.r;
+          if (p.y > H + p.r) p.y = -p.r;
+          const [r, g, b] = p.rgb;
+          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          grd.addColorStop(0,   `rgba(${r},${g},${b},${p.alpha})`);
+          grd.addColorStop(0.45,`rgba(${r},${g},${b},${p.alpha * 0.45})`);
+          grd.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = grd; ctx.fill();
 
-        const sx = (p.x / p.z) * W + cx;
-        const sy = (p.y / p.z) * H + cy;
-        const px = (p.x / p.pz) * W + cx;
-        const py = (p.y / p.pz) * H + cy;
+        } else if (p.type === 'twinkle') {
+          p.phase += p.speed;
+          const alpha = p.baseAlpha * (0.35 + 0.65 * Math.abs(Math.sin(p.phase)));
+          const [r, g, b] = p.hue === 280 ? [226,184,255] : p.hue === 260 ? [251,191,36] : [245,238,255];
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`; ctx.fill();
+          // Sparkle cross on bright twinkle peaks
+          if (p.size > 1.3 && Math.abs(Math.sin(p.phase)) > 0.88) {
+            const arm = p.size * 3.5;
+            ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.45})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath(); ctx.moveTo(p.x - arm, p.y); ctx.lineTo(p.x + arm, p.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(p.x, p.y - arm); ctx.lineTo(p.x, p.y + arm); ctx.stroke();
+          }
 
-        if (sx < 0 || sx > W || sy < 0 || sy > H) return;
-        const size = Math.max(0.3, (1 - p.z / 1200) * 3);
-        const bright = 1 - p.z / 1200;
+        } else {
+          // Warp star
+          p.pz = p.z;
+          p.z -= 5;
+          if (p.z <= 1) {
+            p.x = (Math.random() - 0.5) * W * 4;
+            p.y = (Math.random() - 0.5) * H * 4;
+            p.z = 1200; p.pz = 1200;
+            p.hue = Math.random() > 0.65 ? 280 : Math.random() > 0.5 ? 260 : 0;
+          }
+          const sx = (p.x / p.z) * W + cx;
+          const sy = (p.y / p.z) * H + cy;
+          const px = (p.x / p.pz) * W + cx;
+          const py = (p.y / p.pz) * H + cy;
+          if (sx < 0 || sx > W || sy < 0 || sy > H) return;
 
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(sx, sy);
-        ctx.lineWidth = size;
-        // Lavender / warm gold / soft cream — matching the Cosmic palette
-        ctx.strokeStyle = p.hue === 280 ? `rgba(226,184,255,${bright * 0.9})`
-          : p.hue === 260 ? `rgba(251,191,36,${bright * 0.7})`
-          : `rgba(245,238,255,${bright})`;
-        ctx.stroke();
+          const size   = Math.max(0.5, (1 - p.z / 1200) * 4.5);
+          const bright = 1 - p.z / 1200;
+          const [r, g, b] = p.hue === 280 ? [226,184,255] : p.hue === 260 ? [251,191,36] : [245,238,255];
+
+          // Streak trail
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(sx, sy);
+          ctx.lineWidth = size;
+          ctx.strokeStyle = `rgba(${r},${g},${b},${bright})`; ctx.stroke();
+
+          // Glowing head for close stars
+          if (bright > 0.55) {
+            const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 3);
+            grd.addColorStop(0, `rgba(${r},${g},${b},${bright * 0.85})`);
+            grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+            ctx.beginPath(); ctx.arc(sx, sy, size * 3, 0, Math.PI * 2);
+            ctx.fillStyle = grd; ctx.fill();
+          }
+        }
       });
     };
 
@@ -281,7 +357,7 @@ const AnimatedBackground: React.FC = () => {
         case 'darkFuturistic': initDarkFuturistic(); break;
         case 'cosmic': initCosmic(); break;
         case 'nature': initNature(); break;
-        case 'anime': initAnime(); break;
+        case 'pink': initAnime(); break;
         default: initSubtle(); break;
       }
     };
@@ -292,7 +368,7 @@ const AnimatedBackground: React.FC = () => {
         case 'darkFuturistic': drawDarkFuturistic(); break;
         case 'cosmic': drawCosmic(); break;
         case 'nature': drawNature(); break;
-        case 'anime': drawAnime(); break;
+        case 'pink': drawAnime(); break;
         default: drawSubtle(); break;
       }
       animId = requestAnimationFrame(animate);

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { gamifyApi, Profile as ProfileType, Badge } from '../hooks/useApi';
+import StreakFlame from '../components/animations/StreakFlame';
 import { ThemeName, themes, Theme } from '../themes';
 
 const ALL_BADGES = [
@@ -67,6 +68,23 @@ const ProfilePage: React.FC = () => {
   const nextMilestone = STREAK_MILESTONES.find((m) => m.days > streakCount);
   const daysToNext = nextMilestone ? nextMilestone.days - streakCount : null;
 
+  // High-contrast colors for dark themes
+  const isDark = themeName === 'darkFuturistic' || themeName === 'cosmic';
+  const safeColor    = isDark ? '#4ade80'  : '#059669';
+  const warnColor    = isDark ? '#facc15'  : '#d97706';
+  const brokenColor  = isDark ? '#ff6b8a'  : '#dc2626';
+  const safeBg       = isDark ? '#4ade8018' : '#d1fae533';
+  const warnBg       = isDark ? '#facc1518' : '#fef9c333';
+  const brokenBg     = isDark ? '#ff6b8a18' : '#fecaca33';
+
+  const statusColor  = lastStudied === today ? safeColor : streakAlive ? warnColor : brokenColor;
+  const statusBg     = lastStudied === today ? safeBg    : streakAlive ? warnBg    : brokenBg;
+  const statusText   = lastStudied === today
+    ? '✓ Studied today — streak safe!'
+    : streakAlive
+    ? '! Study today to keep your streak!'
+    : '✕ Streak broken — start a new one!';
+
   if (loading) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: theme.font }}>Loading...</div>;
 
   return (
@@ -104,13 +122,7 @@ const ProfilePage: React.FC = () => {
           textAlign: 'center',
         }}
       >
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], rotate: [0, -5, 5, 0] }}
-          transition={{ repeat: Infinity, duration: 2.5, repeatDelay: 1.5 }}
-          style={{ fontSize: '3.5rem', lineHeight: 1, marginBottom: '0.5rem' }}
-        >
-          🔥
-        </motion.div>
+        <StreakFlame streak={streakCount} size="lg" />
         <div style={{ fontSize: '4rem', fontWeight: 900, color: theme.primary, lineHeight: 1 }}>
           {streakCount}
         </div>
@@ -122,15 +134,16 @@ const ProfilePage: React.FC = () => {
         <div style={{
           display: 'inline-block',
           marginTop: '0.75rem',
-          padding: '0.3rem 0.9rem',
+          padding: '0.35rem 1rem',
           borderRadius: '999px',
           fontSize: '0.82rem',
           fontWeight: 700,
-          background: streakAlive ? '#d1fae533' : '#fecaca33',
-          color: streakAlive ? '#059669' : '#dc2626',
-          border: `1px solid ${streakAlive ? '#059669' : '#dc2626'}44`,
+          background: statusBg,
+          color: statusColor,
+          border: `1px solid ${statusColor}66`,
+          textShadow: isDark ? `0 0 10px ${statusColor}88` : 'none',
         }}>
-          {lastStudied === today ? '✅ Studied today — streak safe!' : streakAlive ? '⚠️ Study today to keep your streak!' : '💔 Streak broken — start a new one!'}
+          {statusText}
         </div>
 
         {/* Stats row */}
@@ -146,10 +159,17 @@ const ProfilePage: React.FC = () => {
           </div>
           <div style={{ width: '1px', background: `${theme.primary}33` }} />
           <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: theme.text }}>{daysToNext ?? '∞'}</div>
-            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>
-              {nextMilestone ? `to ${nextMilestone.icon} ${nextMilestone.label}` : 'Legendary'}
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: theme.text }}>
+              {nextMilestone ? nextMilestone.icon : '👑'}
             </div>
+            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>
+              {nextMilestone ? `${nextMilestone.label} goal` : 'Legendary'}
+            </div>
+            {daysToNext !== null && (
+              <div style={{ fontSize: '0.65rem', color: theme.textLight, opacity: 0.7 }}>
+                {daysToNext} days away
+              </div>
+            )}
           </div>
         </div>
 

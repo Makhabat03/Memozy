@@ -80,7 +80,7 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ active }) => {
 
     animRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animRef.current);
-  }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active]); // eslint-disable-line
 
   if (!active) return null;
 

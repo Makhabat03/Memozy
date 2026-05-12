@@ -125,6 +125,38 @@ export const MCards: React.FC<Props> = ({ size = 28, style }) => (
   </svg>
 );
 
+// ── ❤️ Heart — streak / life ───────────────────────────────────────────────
+export const MHeart: React.FC<Props & { filled?: boolean; color?: string }> = ({
+  size = 28,
+  filled = true,
+  color = '#f43f5e',
+  style,
+}) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={style}>
+    {filled ? (
+      <>
+        <path
+          d="M16 27C16 27 3 19 3 11C3 6.5 6.5 3 11 3C13.5 3 15.5 4.5 16 7C16.5 4.5 18.5 3 21 3C25.5 3 29 6.5 29 11C29 19 16 27 16 27Z"
+          fill={color}
+        />
+        <path
+          d="M11 6C8.5 6 7 8 7 10C7 11 7.5 12 8.5 13"
+          stroke="rgba(255,255,255,0.45)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </>
+    ) : (
+      <path
+        d="M16 27C16 27 3 19 3 11C3 6.5 6.5 3 11 3C13.5 3 15.5 4.5 16 7C16.5 4.5 18.5 3 21 3C25.5 3 29 6.5 29 11C29 19 16 27 16 27Z"
+        stroke={color}
+        strokeWidth="2"
+        opacity="0.35"
+      />
+    )}
+  </svg>
+);
+
 // ── 👋 Wave — greeting ─────────────────────────────────────────────────────
 export const MWave: React.FC<Props> = ({ size = 28, style }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={style}>
