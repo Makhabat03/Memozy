@@ -7,6 +7,7 @@ import CursorEffect from './components/CursorEffect';
 import Navbar from './components/Navbar';
 import FirstLaunch from './pages/FirstLaunch';
 import Auth from './pages/Auth';
+import OnboardingTour from './components/OnboardingTour';
 import Dashboard from './pages/Dashboard';
 import Create from './pages/Create';
 import Study from './pages/Study';
@@ -14,11 +15,13 @@ import Decks from './pages/Decks';
 import Social from './pages/Social';
 import ProfilePage from './pages/Profile';
 
-const hasLaunched = () => !!localStorage.getItem('memozy_launched');
+const hasLaunched   = () => !!localStorage.getItem('memozy_launched');
+const hasOnboarded  = () => !!localStorage.getItem('memozy_onboarded');
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth();
-  const [launched, setLaunched] = React.useState(hasLaunched);
+  const [launched,   setLaunched]   = React.useState(hasLaunched);
+  const [onboarded,  setOnboarded]  = React.useState(hasOnboarded);
 
   if (loading) {
     return (
@@ -39,6 +42,7 @@ const AppRoutes: React.FC = () => {
   return (
     <>
       <Navbar />
+      {!onboarded && <OnboardingTour onComplete={() => setOnboarded(true)} />}
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/create" element={<Create />} />
