@@ -14,7 +14,7 @@ const TourOverlay: React.FC = () => {
   const location   = useLocation();
   const [rect, setRect] = useState<DOMRect | null>(null);
 
-  const current = TOUR_STEPS[step];
+  const current = TOUR_STEPS[step] ?? TOUR_STEPS[0];
 
   // Find the target element, with retry for pages still loading
   const findTarget = useCallback(() => {

@@ -41,6 +41,8 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [step, setStep] = useState(0);
 
   const startTour = useCallback(() => { setStep(0); setIsActive(true); }, []);
+  // Clamp step whenever TOUR_STEPS length changes (e.g. hot-reload)
+  React.useEffect(() => { setStep(s => Math.min(s, TOUR_STEPS.length - 1)); }, []);
   const endTour   = useCallback(() => {
     setIsActive(false);
     localStorage.setItem('memozy_onboarded', '1');
