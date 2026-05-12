@@ -25,13 +25,13 @@ const TourOverlay: React.FC = () => {
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => setRect(el.getBoundingClientRect()), 380);
-      } else if (tries++ < 20) {
-        setTimeout(poll, 150);
+      } else if (tries++ < 50) {
+        setTimeout(poll, 200);
       } else {
         setRect(null); // fall back to centered modal
       }
     };
-    setTimeout(poll, 200);
+    setTimeout(poll, 400);
   }, [current.target]);
 
   // Navigate if needed, then find target
