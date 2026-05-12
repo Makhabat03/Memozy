@@ -1,8 +1,8 @@
-# ⚡ FlashAI
+# 🌸 Memozy
 
 **AI-powered flashcard app for web and mobile — fully free to run.**
 
-FlashAI lets you instantly generate flashcard decks from text, PDFs, or images using Groq's free LLaMA API. It features SM-2 spaced repetition, Duolingo-style gamification (XP, streaks, level-ups, badges), and a social layer with deck sharing, following, and a weekly leaderboard.
+Memozy lets you instantly generate flashcard decks from text, PDFs, or images using Groq's free LLaMA API. It features SM-2 spaced repetition, Duolingo-style gamification (XP, streaks, level-ups, badges), and a social layer with deck sharing, following, and a weekly leaderboard.
 
 ---
 
@@ -22,8 +22,9 @@ FlashAI lets you instantly generate flashcard decks from text, PDFs, or images u
 
 - **AI Card Generation** — paste text, upload a PDF, or snap a photo → instant flashcards via Groq LLaMA 3.3
 - **SM-2 Spaced Repetition** — Hard/Good/Easy ratings schedule reviews using the SM-2 algorithm
-- **Gamification** — XP, levels, daily streaks with fire animation, 6 badge types
-- **Themes** — Cute (pink/pastel) or Minimal (indigo/clean), saved to localStorage
+- **Gamification** — XP, levels, daily streaks with fire animation, combos, and 6 badge types
+- **5 Themes** — Minimal, Dark Futuristic, Nature, Pink, and Cosmic — each with unique animated backgrounds
+- **Custom Emoji Library** — hand-crafted SVG emoji components (MemozyEmoji) for consistent cross-platform look
 - **Social** — follow users, share public decks, weekly XP leaderboard
 - **Sounds** — programmatic Web Audio API sounds (no external files needed)
 - **Mobile** — full React Native Expo app with swipe-to-rate gestures, haptic feedback, and camera/document picker
@@ -105,10 +106,12 @@ flashai/
 ├── frontend/         # React TypeScript web app
 │   └── src/
 │       ├── pages/    # Dashboard, Create, Study, Decks, Social, Profile, Auth
-│       ├── components/animations/  # XPPopup, LevelUp, Confetti, StreakFlame, BadgeToast
+│       ├── components/
+│       │   ├── animations/  # StreakFlame, RatingFeedback, ConfettiEffect, DeckCompleteScreen
+│       │   └── MemozyEmoji.tsx  # Custom SVG emoji library
 │       ├── context/  # ThemeContext, AuthContext
 │       ├── hooks/    # useApi (axios), useSounds (Web Audio API)
-│       └── themes/   # cute & minimal theme definitions
+│       └── themes/   # 5 theme definitions (minimal, darkFuturistic, nature, pink, cosmic)
 └── mobile/           # Expo React Native app
     └── app/
         ├── (tabs)/   # Home, Create, Decks, Social, Profile
@@ -120,4 +123,4 @@ flashai/
 
 ## CV Bullet
 
-*Built FlashAI, a full-stack AI-powered flashcard app (web + mobile) with PDF/image/text ingestion via Groq LLaMA 3.3, SM-2 spaced repetition algorithm, Duolingo-style gamification (streaks, XP, level-up sounds, badges), and social features including deck sharing, follow system, and weekly leaderboard. Stack: React, React Native (Expo), FastAPI, Supabase, Groq — fully free to run.*
+*Built Memozy, a full-stack AI-powered flashcard app (web + mobile) with PDF/image/text ingestion via Groq LLaMA 3.3, SM-2 spaced repetition algorithm, Duolingo-style gamification (streaks, XP, level-up sounds, badges), 5 animated themes, and social features including deck sharing, follow system, and weekly leaderboard. Stack: React, React Native (Expo), FastAPI, Supabase, Groq — fully free to run.*
