@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { gamifyApi, Profile as ProfileType, Badge } from '../hooks/useApi';
 import StreakFlame from '../components/animations/StreakFlame';
 import { ThemeName, themes, Theme } from '../themes';
+import { LANGUAGES, LangCode } from '../i18n/translations';
 
 const ALL_BADGES = [
   { type: 'first_deck', icon: '📚', label: 'First Deck' },
@@ -26,6 +28,7 @@ const STREAK_MILESTONES = [
 const ProfilePage: React.FC = () => {
   const { theme, themeName, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { lang, setLang } = useLanguage();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -286,6 +289,50 @@ const ProfilePage: React.FC = () => {
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: theme.text }}>{label}</div>
                 {earned && <div style={{ fontSize: '0.65rem', color: theme.accent, marginTop: '0.2rem' }}>Earned ✓</div>}
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Language */}
+      <div style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem', margin: '0 0 1rem' }}>Language</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.6rem' }}>
+          {LANGUAGES.map((l) => {
+            const active = lang === l.code;
+            return (
+              <motion.button
+                key={l.code}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setLang(l.code as LangCode)}
+                style={{
+                  padding: '0.65rem 0.75rem',
+                  border: `2px solid ${active ? theme.primary : theme.primary + '33'}`,
+                  borderRadius: theme.borderRadius,
+                  background: active ? `${theme.primary}18` : 'transparent',
+                  fontFamily: theme.font,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.55rem',
+                  transition: 'all 0.15s',
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: '1.4rem', lineHeight: 1, flexShrink: 0 }}>{l.flag}</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: active ? theme.primary : theme.text, lineHeight: 1.2 }}>
+                    {l.label}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: theme.textLight, marginTop: '0.1rem' }}>
+                    {l.english}
+                  </div>
+                </div>
+                {active && (
+                  <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: theme.primary, fontWeight: 900 }}>✓</span>
+                )}
+              </motion.button>
             );
           })}
         </div>
