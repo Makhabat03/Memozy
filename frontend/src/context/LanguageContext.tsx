@@ -9,7 +9,7 @@ interface LanguageCtx {
 }
 
 const LanguageContext = createContext<LanguageCtx>({
-  lang: 'en', setLang: () => {}, t: (k) => k, isRTL: false,
+  lang: 'en', setLang: () => {}, t: (k) => k as string, isRTL: false,
 });
 
 const stored = (): LangCode => {
@@ -25,7 +25,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLangState(l);
   };
 
-  const t = (key: keyof TranslationKeys): string => T[lang]?.[key] ?? T['en'][key] ?? key;
+  const t = (key: keyof TranslationKeys): string =>
+    T?.[lang]?.[key] ?? T?.['en']?.[key] ?? (key as string);
   const isRTL = LANGUAGES.find(l => l.code === lang)?.rtl ?? false;
 
   return (
