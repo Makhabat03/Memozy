@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { decksApi, gamifyApi, Deck, Profile } from '../hooks/useApi';
 import StreakFlame from '../components/animations/StreakFlame';
 import { PlusCircle, BookOpen } from 'lucide-react';
@@ -30,6 +31,7 @@ const cardVariants = {
 const Dashboard: React.FC = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ const Dashboard: React.FC = () => {
         <div data-tour="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              Hey, {profile?.username || 'there'}! <MWave size={28} />
+              {t('hey')}, {profile?.username || 'there'}! <MWave size={28} />
             </h1>
             <p style={{ color: theme.textLight, marginTop: '0.25rem' }}>
               Level {profile?.level || 1} · {profile?.xp || 0} XP
@@ -91,7 +93,7 @@ const Dashboard: React.FC = () => {
           />
         </div>
         <div style={{ fontSize: '0.8rem', color: theme.textLight, marginTop: '0.25rem' }}>
-          {xpToNextLevel} XP to level {(profile?.level || 1) + 1}
+          {xpToNextLevel} {t('xpToLevel')} {(profile?.level || 1) + 1}
         </div>
       </motion.div>
 
@@ -100,11 +102,11 @@ const Dashboard: React.FC = () => {
         variants={itemVariants}
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}
       >
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: theme.text, margin: 0 }}>Your Decks</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: theme.text, margin: 0 }}>{t('yourDecks')}</h2>
         <div data-tour="new-deck-btn">
           <Link to="/create">
             <GlassButton size="sm">
-              <PlusCircle size={16} /> New Deck
+              <PlusCircle size={16} /> {t('newDeck')}
             </GlassButton>
           </Link>
         </div>
@@ -134,9 +136,9 @@ const Dashboard: React.FC = () => {
             >
               <BookOpen size={48} style={{ color: theme.textLight, marginBottom: '1rem' }} />
             </motion.div>
-            <p style={{ color: theme.textLight, fontSize: '1.1rem' }}>No decks yet. Create your first one!</p>
+            <p style={{ color: theme.textLight, fontSize: '1.1rem' }}>{t('noDecksYet')} {t('createFirst')}</p>
             <Link to="/create">
-              <GlassButton style={{ marginTop: '1rem' }}>Create a Deck</GlassButton>
+              <GlassButton style={{ marginTop: '1rem' }}>{t('create')}</GlassButton>
             </Link>
           </motion.div>
         ) : (
@@ -186,9 +188,9 @@ const Dashboard: React.FC = () => {
                           fontWeight: 700,
                         }}
                       >
-                        {deck.card_count} cards
+                        {deck.card_count} {t('cards')}
                       </span>
-                      <span style={{ fontSize: '0.8rem', color: theme.textLight }}>Study →</span>
+                      <span style={{ fontSize: '0.8rem', color: theme.textLight }}>{t('study')} →</span>
                     </div>
                   </div>
                 </Link>

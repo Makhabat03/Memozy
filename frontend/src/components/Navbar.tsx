@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useAmbientSound } from '../hooks/useAmbientSound';
 import { Home, PlusCircle, BookOpen, Users, User, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import GlassButton from './GlassButton';
@@ -10,16 +11,17 @@ import { useTour } from '../context/TourContext';
 const Navbar: React.FC = () => {
   const { theme } = useTheme();
   const { signOut } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const { playing, toggle } = useAmbientSound();
   const { startTour } = useTour();
 
   const links = [
-    { to: '/', icon: <Home size={20} />, label: 'Home' },
-    { to: '/create', icon: <PlusCircle size={20} />, label: 'Create' },
-    { to: '/decks', icon: <BookOpen size={20} />, label: 'Decks' },
-    { to: '/social', icon: <Users size={20} />, label: 'Social' },
-    { to: '/profile', icon: <User size={20} />, label: 'Profile' },
+    { to: '/', icon: <Home size={20} />, label: t('home') },
+    { to: '/create', icon: <PlusCircle size={20} />, label: t('create') },
+    { to: '/decks', icon: <BookOpen size={20} />, label: t('decks') },
+    { to: '/social', icon: <Users size={20} />, label: t('social') },
+    { to: '/profile', icon: <User size={20} />, label: t('profile') },
   ];
 
   return (
@@ -95,7 +97,7 @@ const Navbar: React.FC = () => {
           {playing ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </GlassButton>
         <GlassButton variant="outline" size="sm" onClick={signOut}>
-          Sign out
+          {t('signOut')}
         </GlassButton>
       </div>
     </nav>

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { cardsApi, decksApi, Card } from '../hooks/useApi';
 import { FileText, Image, File, Loader, Globe, Lock } from 'lucide-react';
 import GlassButton from '../components/GlassButton';
@@ -11,6 +12,7 @@ type Tab = 'text' | 'pdf' | 'image';
 const Create: React.FC = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>('text');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -96,13 +98,13 @@ const Create: React.FC = () => {
       <div style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center', fontFamily: theme.font }}>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-          <h2 style={{ color: theme.primary, fontWeight: 900 }}>Deck Created!</h2>
-          <p style={{ color: theme.textLight }}>{editingCards.length} cards saved to "{title}"</p>
+          <h2 style={{ color: theme.primary, fontWeight: 900 }}>{t('deckCreated')}</h2>
+          <p style={{ color: theme.textLight }}>{editingCards.length} {t('cardsGenerated')} "{title}"</p>
           <GlassButton
             onClick={() => { setSaved(false); setGeneratedCards([]); setTitle(''); setText(''); setFile(null); }}
             style={{ marginTop: '1.5rem' }}
           >
-            Create Another
+            {t('createAnother')}
           </GlassButton>
         </motion.div>
       </div>
@@ -164,11 +166,11 @@ const Create: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1rem', fontFamily: theme.font }}>
-      <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, marginBottom: '1.5rem' }}>Create Flashcards</h1>
+      <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: theme.text, marginBottom: '1.5rem' }}>{t('createFlashcards')}</h1>
 
       <div data-tour="create-title" style={{ marginBottom: '1.25rem' }}>
-        <label style={{ fontWeight: 700, color: theme.text, display: 'block', marginBottom: '0.5rem' }}>Deck Title</label>
-        <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Biology Chapter 3" />
+        <label style={{ fontWeight: 700, color: theme.text, display: 'block', marginBottom: '0.5rem' }}>{t('deckTitle')}</label>
+        <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('deckTitlePlaceholder')} />
       </div>
 
       <div data-tour="create-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: `${theme.primary}11`, borderRadius: theme.borderRadius, padding: '0.35rem' }}>
@@ -228,7 +230,7 @@ const Create: React.FC = () => {
 
       <div data-tour="create-num-cards" style={{ marginBottom: '1.5rem' }}>
         <label style={{ fontWeight: 700, color: theme.text, display: 'block', marginBottom: '0.5rem' }}>
-          Number of Cards: {numCards}
+          {t('numCards')}: {numCards}
         </label>
         <input
           type="range"
@@ -256,10 +258,10 @@ const Create: React.FC = () => {
             : <Lock size={18} style={{ color: theme.textLight }} />}
           <div>
             <div style={{ fontWeight: 700, fontSize: '0.9rem', color: theme.text }}>
-              {isPublic ? 'Public' : 'Private'}
+              {isPublic ? t('publicLabel') : t('privateLabel')}
             </div>
             <div style={{ fontSize: '0.75rem', color: theme.textLight }}>
-              {isPublic ? 'Visible in the social feed' : 'Only accessible via share link'}
+              {isPublic ? t('publicDesc') : t('privateDesc')}
             </div>
           </div>
         </div>
@@ -289,10 +291,10 @@ const Create: React.FC = () => {
             <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8 }}>
               <Loader size={18} />
             </motion.span>
-            Generating with AI...
+            {t('generating')}
           </>
         ) : (
-          '⚡ Generate Flashcards'
+          t('generateBtn')
         )}
       </GlassButton>
       </div>

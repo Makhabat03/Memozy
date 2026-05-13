@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { studyApi, gamifyApi, Card } from '../hooks/useApi';
 import { useSounds } from '../hooks/useSounds';
 import DeckCompleteScreen from '../components/animations/DeckCompleteScreen';
@@ -14,6 +15,7 @@ const Study: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { play } = useSounds();
 
@@ -251,7 +253,7 @@ const Study: React.FC = () => {
                     {current.front}
                   </div>
                   <div style={{ marginTop: '1.5rem', color: theme.textLight, fontSize: '0.85rem' }}>
-                    Tap to flip 💧
+                    {t('flipHint')} 💧
                   </div>
                 </div>
 
@@ -347,9 +349,9 @@ const Study: React.FC = () => {
                 {/* Rating buttons */}
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   {[
-                    { label: '😤 Hard', quality: 1, tintColor: '#dc2626' },
-                    { label: '👍 Good', quality: 3, tintColor: theme.secondary },
-                    { label: '😎 Easy', quality: 5, tintColor: '#059669' },
+                    { label: `😤 ${t('hard')}`, quality: 1, tintColor: '#dc2626' },
+                    { label: `👍 ${t('good')}`, quality: 3, tintColor: theme.secondary },
+                    { label: `😎 ${t('easy')}`, quality: 5, tintColor: '#059669' },
                   ].map(({ label, quality, tintColor }) => (
                     <GlassButton
                       key={quality}

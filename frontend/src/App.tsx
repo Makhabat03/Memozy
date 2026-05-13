@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import AnimatedBackground from './components/AnimatedBackground';
 import CursorEffect from './components/CursorEffect';
 import Navbar from './components/Navbar';
@@ -66,6 +67,7 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => (
+  <LanguageProvider>
   <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
@@ -81,6 +83,7 @@ const App: React.FC = () => (
       </BrowserRouter>
     </AuthProvider>
   </ThemeProvider>
+  </LanguageProvider>
 );
 
 export default App;
