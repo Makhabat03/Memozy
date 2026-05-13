@@ -87,6 +87,7 @@ export const cardsApi = {
 
 export const studyApi = {
   getDueCards: (deckId: string) => api.get<{ cards: Card[]; count: number }>(`/study/due/${deckId}`),
+  getAllCards: (deckId: string) => api.get<{ cards: Card[]; count: number }>(`/study/all/${deckId}`),
   rateCard: (cardId: string, quality: number) =>
     api.post<{ card: Card; next_review: string }>('/study/rate', { card_id: cardId, quality }),
 };

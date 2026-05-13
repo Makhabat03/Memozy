@@ -111,29 +111,37 @@ const Decks: React.FC = () => {
                 </button>
               </div>
 
-              <div data-tour={i === 0 ? 'decks-actions' : undefined} style={{ display: 'flex', gap: '0.5rem' }}>
-                <Link to={`/study/${deck.id}`} style={{ flex: 1, textDecoration: 'none' }}>
-                  <GlassButton fullWidth size="sm">Study</GlassButton>
-                </Link>
-                <GlassButton
-                  onClick={() => handleCopyLink(deck)}
-                  title="Copy share link"
-                  variant="outline"
-                  size="sm"
-                  tintColor={copied === deck.id ? theme.accent : theme.primary}
-                  style={{ padding: '0.6rem 0.75rem' }}
-                >
-                  <Link2 size={16} />
-                </GlassButton>
-                <GlassButton
-                  onClick={() => handleDelete(deck.id)}
-                  title="Delete"
-                  variant="danger"
-                  size="sm"
-                  style={{ padding: '0.6rem 0.75rem' }}
-                >
-                  <Trash2 size={16} />
-                </GlassButton>
+              <div data-tour={i === 0 ? 'decks-actions' : undefined} style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <Link to={`/study/${deck.id}`} style={{ flex: 1, textDecoration: 'none' }}>
+                    <GlassButton fullWidth size="sm">Study</GlassButton>
+                  </Link>
+                  <Link to={`/study/${deck.id}?mode=practice`} style={{ flex: 1, textDecoration: 'none' }}>
+                    <GlassButton fullWidth size="sm" variant="outline">Practice All</GlassButton>
+                  </Link>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <GlassButton
+                    onClick={() => handleCopyLink(deck)}
+                    title="Copy share link"
+                    variant="outline"
+                    size="sm"
+                    tintColor={copied === deck.id ? theme.accent : theme.primary}
+                    style={{ flex: 1, padding: '0.5rem' }}
+                  >
+                    <Link2 size={15} />
+                    <span style={{ fontSize: '0.75rem' }}>Copy Link</span>
+                  </GlassButton>
+                  <GlassButton
+                    onClick={() => handleDelete(deck.id)}
+                    title="Delete"
+                    variant="danger"
+                    size="sm"
+                    style={{ padding: '0.5rem 0.75rem' }}
+                  >
+                    <Trash2 size={15} />
+                  </GlassButton>
+                </div>
               </div>
               {copied === deck.id && (
                 <motion.div

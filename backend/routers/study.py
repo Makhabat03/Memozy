@@ -61,6 +61,20 @@ async def rate_card(body: CardRating):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/all/{deck_id}")
+async def get_all_cards(deck_id: str):
+    """Return all cards in a deck for practice mode (shuffled)."""
+    import random
+    try:
+        sb = get_supabase()
+        result = sb.table("cards").select("*").eq("deck_id", deck_id).execute()
+        cards = result.data
+        random.shuffle(cards)
+        return {"cards": cards, "count": len(cards)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/session")
 async def create_session(body: SessionCreate):
     try:
