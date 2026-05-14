@@ -28,29 +28,6 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, scale: 1, transition: gentleSpring },
 } as any;
 
-const GoalRing: React.FC<{ progress: number; goal: number; theme: any; onClick: () => void }> = ({ progress, goal, theme, onClick }) => {
-  const r = 32, circ = 2 * Math.PI * r;
-  const pct = Math.min(1, progress / goal);
-  const offset = circ * (1 - pct);
-  const done = pct >= 1;
-  return (
-    <div style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }} onClick={onClick} title="Click to set daily goal">
-      <svg width={80} height={80} style={{ overflow: 'visible' }}>
-        <circle cx={40} cy={40} r={r} fill="none" stroke={`${theme.primary}22`} strokeWidth={6} />
-        <circle cx={40} cy={40} r={r} fill="none"
-          stroke={done ? '#059669' : theme.primary} strokeWidth={6}
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.55s ease' }} />
-        <text x={40} y={37} textAnchor="middle" fill={theme.text} fontSize={13} fontWeight={800} fontFamily="inherit">{progress}</text>
-        <text x={40} y={51} textAnchor="middle" fill={theme.textLight} fontSize={10} fontFamily="inherit">/{goal}</text>
-      </svg>
-      <div style={{ fontSize: '0.68rem', color: theme.textLight, marginTop: '2px' }}>
-        {done ? '🎯 Goal!' : 'Daily Goal'}
-      </div>
-    </div>
-  );
-};
-
 const Dashboard: React.FC = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -58,29 +35,6 @@ const Dashboard: React.FC = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editingGoal, setEditingGoal] = useState(false);
-  const [goalInput, setGoalInput] = useState('');
-
-  const today = new Date().toISOString().split('T')[0];
-  const [dailyGoal, setDailyGoal] = useState(() => parseInt(localStorage.getItem('memozy_daily_goal') || '20'));
-  const [dailyProgress, setDailyProgress] = useState(() => parseInt(localStorage.getItem(`memozy_daily_${today}`) || '0'));
-
-  // Refresh progress on focus (user might have been studying in another tab)
-  React.useEffect(() => {
-    const refresh = () => setDailyProgress(parseInt(localStorage.getItem(`memozy_daily_${today}`) || '0'));
-    window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
-  }, [today]);
-
-  const handleSetGoal = () => {
-    const v = parseInt(goalInput);
-    if (v > 0 && v <= 500) {
-      localStorage.setItem('memozy_daily_goal', String(v));
-      setDailyGoal(v);
-    }
-    setEditingGoal(false);
-  };
-
   useEffect(() => {
     if (!user) return;
     Promise.all([
@@ -120,38 +74,15 @@ const Dashboard: React.FC = () => {
               {t('hey')}, {profile?.username || 'there'}! <MWave size={28} />
             </h1>
             <p style={{ color: theme.textLight, marginTop: '0.25rem' }}>
-              Level {profile?.level || 1} · {profile?.xp || 0} XP
+              {t('levelLabel')} {profile?.level || 1} · {profile?.xp || 0} XP
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <div data-tour="streak-display">
               <StreakFlame streak={profile?.streak_count || 0} size="md" />
             </div>
-            <GoalRing progress={dailyProgress} goal={dailyGoal} theme={theme}
-              onClick={() => { setGoalInput(String(dailyGoal)); setEditingGoal(true); }} />
           </div>
         </div>
-
-        {/* Daily goal edit modal */}
-        <AnimatePresence>
-          {editingGoal && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1rem 1.25rem',
-                border: `1px solid ${theme.primary}33`, marginTop: '0.75rem',
-                display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <span style={{ color: theme.text, fontWeight: 700, fontSize: '0.88rem' }}>Daily goal:</span>
-              <input type="number" min={1} max={500} value={goalInput} onChange={e => setGoalInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSetGoal()}
-                autoFocus
-                style={{ width: '80px', padding: '0.4rem 0.6rem', border: `1px solid ${theme.primary}44`,
-                  borderRadius: '8px', background: theme.background, color: theme.text,
-                  fontFamily: theme.font, fontSize: '0.9rem', outline: 'none' }} />
-              <span style={{ color: theme.textLight, fontSize: '0.82rem' }}>cards/day</span>
-              <GlassButton size="sm" onClick={handleSetGoal}>Save</GlassButton>
-              <GlassButton size="sm" variant="outline" onClick={() => setEditingGoal(false)}>Cancel</GlassButton>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* XP bar */}
         <div data-tour="xp-bar" style={{ marginTop: '1rem', background: `${theme.primary}22`, borderRadius: '999px', height: '10px', overflow: 'hidden' }}>

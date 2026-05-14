@@ -12,6 +12,7 @@ export interface Card {
   back: string;
   hint?: string;
   example?: string;
+  tags?: string[];
   difficulty: number;
   next_review: string | null;
   interval_days: number;
@@ -72,7 +73,7 @@ export const decksApi = {
 
 export const cardsApi = {
   getByDeck: (deckId: string) => api.get<{ cards: Card[] }>(`/cards/${deckId}`),
-  generateFromText: (data: { text: string; deck_id: string; num_cards: number }) =>
+  generateFromText: (data: { text: string; deck_id: string; num_cards: number; language?: string; difficulty_mode?: string }) =>
     api.post<{ cards: Card[]; count: number }>('/cards/generate/text', data),
   generateFromPdf: (formData: FormData) =>
     api.post<{ cards: Card[]; count: number }>('/cards/generate/pdf', formData, {
@@ -83,6 +84,9 @@ export const cardsApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   update: (id: string, data: Partial<Card>) => api.put<{ card: Card }>(`/cards/${id}`, data),
+  createCard: (data: { deck_id: string; front: string; back: string; hint?: string; tags?: string[] }) =>
+    api.post<{ card: Card }>('/cards/', data),
+  deleteCard: (cardId: string) => api.delete(`/cards/${cardId}`),
 };
 
 export const studyApi = {

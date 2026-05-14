@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAmbientSound } from '../hooks/useAmbientSound';
 import { Home, PlusCircle, BookOpen, Users, User, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import GlassButton from './GlassButton';
+import LanguageDropdown from './LanguageDropdown';
 import { useTour } from '../context/TourContext';
 
 const Navbar: React.FC = () => {
@@ -77,6 +78,7 @@ const Navbar: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <LanguageDropdown />
         <GlassButton
           variant="outline"
           size="sm"

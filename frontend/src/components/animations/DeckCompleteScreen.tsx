@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import XPPopup from './XPPopup';
 import LevelUpModal from './LevelUpModal';
 import BadgeEarnedToast from './BadgeEarnedToast';
-import ConfettiEffect from './ConfettiEffect';
 import GlassButton from '../GlassButton';
 import { MFlame, MGlowStar, MFlex, MCards, MStar, MStarEmpty } from '../MemozyEmoji';
 
@@ -35,6 +35,7 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
   onLevelUpClose, onBadgeDismiss, onStudyAgain, onBack,
 }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   const stars = pct === 100 ? 3 : pct >= 60 ? 2 : 1;
   const tier = TIERS.find((t) => pct >= t.pct) ?? TIERS[TIERS.length - 1];
@@ -45,6 +46,13 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
   const [barReady, setBarReady] = useState(false);
 
   useEffect(() => {
+    // Vibration — pattern scales with score
+    if ('vibrate' in navigator) {
+      if (pct === 100) navigator.vibrate([80, 40, 80, 40, 180, 40, 80]);
+      else if (pct >= 80) navigator.vibrate([80, 40, 120]);
+      else navigator.vibrate([60]);
+    }
+
     for (let i = 1; i <= stars; i++) {
       setTimeout(() => setStarsShown(i), 280 + i * 360);
     }
@@ -71,7 +79,6 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
 
   return (
     <>
-      <ConfettiEffect active />
       <XPPopup xp={xpEarned} show={showXP} />
       <LevelUpModal show={levelUp} level={newLevel} onClose={onLevelUpClose} />
       <BadgeEarnedToast badges={badges} onDismiss={onBadgeDismiss} />
@@ -80,6 +87,16 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
         maxWidth: '460px', margin: '2.5rem auto', padding: '1rem 1rem 2rem',
         fontFamily: theme.font, textAlign: 'center',
       }}>
+        {/* Glow ring for perfect score */}
+        {pct === 100 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: [0, 0.6, 0], scale: [0.6, 1.8, 2.4] }}
+            transition={{ duration: 1.2, delay: 0.1 }}
+            style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(circle, ${tier.color}88, transparent 70%)`, pointerEvents: 'none' }}
+          />
+        )}
+
         {/* Performance header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.55, y: -12 }}
@@ -88,8 +105,10 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
           style={{ marginBottom: '0.85rem' }}
         >
           <motion.div
-            animate={{ rotate: [0, -12, 12, -6, 6, 0], scale: [1, 1.18, 1] }}
-            transition={{ duration: 0.65, delay: 0.1 }}
+            animate={pct === 100
+              ? { rotate: [0, -15, 15, -10, 10, -5, 5, 0], scale: [1, 1.35, 0.9, 1.25, 0.95, 1.1, 1] }
+              : { rotate: [0, -12, 12, -6, 6, 0], scale: [1, 1.18, 1] }}
+            transition={{ duration: pct === 100 ? 0.9 : 0.65, delay: 0.1 }}
             style={{ lineHeight: 1, marginBottom: '0.4rem' }}
           >
             {tier.icon}
@@ -142,7 +161,7 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
             </span>
           </div>
           <div style={{ color: theme.textLight, fontSize: '0.88rem', marginBottom: '1.3rem' }}>
-            cards correct
+            {t('cardsCorrectLabel')}
           </div>
 
           {/* Accuracy bar */}
@@ -160,7 +179,7 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
             />
           </div>
           <div style={{ fontSize: '0.83rem', color: theme.textLight, marginBottom: '1.1rem' }}>
-            {pct}% accuracy
+            {pct}% {t('accuracyLabel')}
           </div>
 
           {/* XP + Streak chips */}
@@ -177,7 +196,7 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
               <div style={{ fontSize: '1.35rem', fontWeight: 900, color: theme.accent }}>
                 +{xpDisp}
               </div>
-              <div style={{ fontSize: '0.72rem', color: theme.textLight }}>XP earned</div>
+              <div style={{ fontSize: '0.72rem', color: theme.textLight }}>{t('xpEarnedLabel')}</div>
             </motion.div>
 
             {streak > 0 && (
@@ -193,7 +212,7 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
                 <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
                   <MFlame size={22} /> {streak}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: theme.textLight }}>day streak</div>
+                <div style={{ fontSize: '0.72rem', color: theme.textLight }}>{t('dayStreakLabel')}</div>
               </motion.div>
             )}
           </div>
@@ -207,10 +226,10 @@ const DeckCompleteScreen: React.FC<DeckCompleteScreenProps> = ({
           style={{ display: 'flex', gap: '0.75rem' }}
         >
           <GlassButton variant="outline" onClick={onStudyAgain} style={{ flex: 1, padding: '0.88rem', fontSize: '0.95rem' }}>
-            🔄 Study Again
+            🔄 {t('studyAgain')}
           </GlassButton>
           <GlassButton onClick={onBack} style={{ flex: 1, padding: '0.88rem', fontSize: '0.95rem' }}>
-            ← Back to Decks
+            ← {t('backToDecks')}
           </GlassButton>
         </motion.div>
       </div>

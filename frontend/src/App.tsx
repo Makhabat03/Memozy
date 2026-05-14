@@ -16,6 +16,7 @@ import Study from './pages/Study';
 import Decks from './pages/Decks';
 import Social from './pages/Social';
 import ProfilePage from './pages/Profile';
+import EditDeck from './pages/EditDeck';
 
 const hasLaunched  = () => !!localStorage.getItem('memozy_launched');
 const hasOnboarded = () => !!localStorage.getItem('memozy_onboarded');
@@ -57,6 +58,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/create" element={<Create />} />
         <Route path="/study/:deckId" element={<Study />} />
+        <Route path="/edit/:deckId" element={<EditDeck />} />
         <Route path="/decks" element={<Decks />} />
         <Route path="/social" element={<Social />} />
         <Route path="/profile" element={<ProfilePage />} />

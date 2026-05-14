@@ -11,7 +11,7 @@ import GlassButton from '../components/GlassButton';
 import CardFlipParticles from '../components/animations/CardFlipParticles';
 import RatingFeedback from '../components/animations/RatingFeedback';
 
-type StudyMode = 'flashcard' | 'multiple-choice' | 'typing';
+type StudyMode = 'flashcard' | 'multiple-choice';
 
 const shuffleArray = <T,>(arr: T[]): T[] => {
   const a = [...arr];
@@ -22,8 +22,6 @@ const shuffleArray = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-
 const updateDailyProgress = () => {
   const key = `memozy_daily_${new Date().toISOString().split('T')[0]}`;
   localStorage.setItem(key, String(parseInt(localStorage.getItem(key) || '0') + 1));
@@ -33,6 +31,7 @@ const Study: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const [searchParams] = useSearchParams();
   const isPractice = searchParams.get('mode') === 'practice';
+  const tagParam = searchParams.get('tag');
   const { theme } = useTheme();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -41,23 +40,23 @@ const Study: React.FC = () => {
 
   const [cards, setCards] = useState<Card[]>([]);
   const [allCards, setAllCards] = useState<Card[]>([]);
+  const [dueCards, setDueCards] = useState<Card[]>([]);   // unfiltered pool for selection screen
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [correct, setCorrect] = useState(0);
   const [done, setDone] = useState(false);
 
+  // Tag selection phase
+  const [phase, setPhase] = useState<'selecting' | 'studying'>(tagParam ? 'studying' : 'selecting');
+  const [selectedTagSet, setSelectedTagSet] = useState<Set<string>>(new Set());
+  const [includeUntagged, setIncludeUntagged] = useState(false);
+
   // Study modes & features
   const [mode, setMode] = useState<StudyMode>('flashcard');
-  const [hearts, setHearts] = useState(5);
-  const [heartsEmpty, setHeartsEmpty] = useState(false);
   const [mcOptions, setMcOptions] = useState<string[]>([]);
   const [mcSelected, setMcSelected] = useState<string | null>(null);
   const [mcRevealed, setMcRevealed] = useState(false);
-  const [typingAnswer, setTypingAnswer] = useState('');
-  const [typingResult, setTypingResult] = useState<'correct' | 'wrong' | null>(null);
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
 
   // Gamification state
   const [xpEarned, setXpEarned] = useState(0);
@@ -72,19 +71,52 @@ const Study: React.FC = () => {
   const [shaking, setShaking] = useState(false);
   const [flipTrigger, setFlipTrigger] = useState(0);
 
-  // Load cards
+  // Load cards — always fetch both due and all so selection screen has correct counts
   useEffect(() => {
     if (!deckId) return;
-    const loader = isPractice ? studyApi.getAllCards(deckId) : studyApi.getDueCards(deckId);
-    loader.then(r => { setCards(r.data.cards); setLoading(false); });
-    cardsApi.getByDeck(deckId).then(r => setAllCards(r.data.cards));
-  }, [deckId, isPractice]);
+    Promise.all([
+      studyApi.getDueCards(deckId),
+      cardsApi.getByDeck(deckId),
+    ]).then(([dueRes, allRes]) => {
+      const due = dueRes.data.cards;
+      const all = allRes.data.cards;
+      setDueCards(due);
+      setAllCards(all);
+      if (tagParam) {
+        const pool = isPractice ? all : due;
+        setCards(pool.filter(c => (c.tags || []).includes(tagParam)));
+      }
+      setLoading(false);
+    });
+  }, [deckId, isPractice, tagParam]);
 
-  // Timer
-  useEffect(() => {
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const handleStartStudy = () => {
+    const pool = isPractice ? allCards : dueCards;
+    const noneSelected = selectedTagSet.size === 0 && !includeUntagged;
+    const tagArr = Array.from(selectedTagSet);
+    const filtered = noneSelected ? pool : pool.filter(c => {
+      const ct = c.tags || [];
+      if (ct.length === 0) return includeUntagged;
+      return tagArr.some(t => ct.includes(t));
+    });
+    setCards(filtered);
+    if (!noneSelected) {
+      setAllCards(allCards.filter(c => {
+        const ct = c.tags || [];
+        if (ct.length === 0) return includeUntagged;
+        return tagArr.some(t => ct.includes(t));
+      }));
+    }
+    setPhase('studying');
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTagSet(prev => {
+      const next = new Set(prev);
+      next.has(tag) ? next.delete(tag) : next.add(tag);
+      return next;
+    });
+  };
 
   // MC options when card or mode changes
   useEffect(() => {
@@ -97,9 +129,6 @@ const Study: React.FC = () => {
     setMcSelected(null);
     setMcRevealed(false);
   }, [index, mode, allCards]);
-
-  // Reset typing state on card change
-  useEffect(() => { setTypingAnswer(''); setTypingResult(null); }, [index]);
 
   const handleFlip = useCallback(() => {
     play('waterDrop');
@@ -139,17 +168,6 @@ const Study: React.FC = () => {
     const newCorrect = correct + (isCorrect ? 1 : 0);
     const newCombo = isCorrect ? combo + 1 : 0;
 
-    // Hearts system (skip in practice / unlimited mode)
-    if (!isPractice && hearts <= 5) {
-      if (!isCorrect) {
-        const next = hearts - 1;
-        setHearts(next);
-        if (next <= 0) { setHeartsEmpty(true); return; }
-      } else if (quality === 5) {
-        setHearts(h => Math.min(5, h + 1));
-      }
-    }
-
     if (isCorrect) {
       play(quality === 5 ? 'easy' : 'good');
       setCorrect(newCorrect);
@@ -168,7 +186,7 @@ const Study: React.FC = () => {
     const next = index + 1;
     if (next >= cards.length) { await finishSession(newCorrect); }
     else { setIndex(next); setFlipped(false); }
-  }, [cards, index, correct, combo, hearts, isPractice, play]); // eslint-disable-line
+  }, [cards, index, correct, combo, play]); // eslint-disable-line
 
   useEffect(() => { rateRef.current = rate; });
 
@@ -179,12 +197,6 @@ const Study: React.FC = () => {
     const isCorrect = opt === cards[index]?.back;
     setTimeout(() => rate(isCorrect ? 3 : 1), 900);
   }, [mcSelected, cards, index, rate]);
-
-  const handleTypingSubmit = useCallback(() => {
-    const isCorrect = typingAnswer.trim().toLowerCase() === cards[index]?.back.trim().toLowerCase();
-    setTypingResult(isCorrect ? 'correct' : 'wrong');
-    setTimeout(() => rate(isCorrect ? 3 : 1), 1100);
-  }, [typingAnswer, cards, index, rate]);
 
   const finishSession = async (finalCorrect: number) => {
     play('deckComplete');
@@ -206,23 +218,215 @@ const Study: React.FC = () => {
 
   const switchMode = (m: StudyMode) => {
     setMode(m); setFlipped(false); setMcSelected(null); setMcRevealed(false);
-    setTypingAnswer(''); setTypingResult(null);
   };
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem', fontFamily: theme.font }}>
-      Loading...
+      {t('loading')}
     </div>
   );
+
+  // ── Tag selection screen ──────────────────────────────────────────────────
+  if (phase === 'selecting') {
+    const deckTags = Array.from(new Set(allCards.flatMap(c => c.tags || [])));
+    const untaggedTotal = allCards.filter(c => !c.tags?.length).length;
+    const untaggedDue   = dueCards.filter(c => !c.tags?.length).length;
+
+    // Skip only if there is truly nothing to show (no tags, no untagged cards)
+    // For "Select & Study" (isPractice), always show the screen
+    if (!isPractice && deckTags.length === 0 && untaggedTotal === 0) {
+      handleStartStudy(); return null;
+    }
+
+    const now = new Date();
+    const tagTotal  = (tag: string) => allCards.filter(c => (c.tags || []).includes(tag)).length;
+    const tagDue    = (tag: string) => dueCards.filter(c => (c.tags || []).includes(tag)).length;
+
+    // Next upcoming review date label for a caught-up tag/group
+    const nextReviewLabel = (pool: Card[]) => {
+      const upcoming = pool
+        .filter(c => c.next_review && new Date(c.next_review) > now)
+        .sort((a, b) => new Date(a.next_review!).getTime() - new Date(b.next_review!).getTime());
+      if (!upcoming.length) return null;
+      const days = Math.ceil((new Date(upcoming[0].next_review!).getTime() - now.getTime()) / 86400000);
+      if (days <= 0) return 'later today';
+      if (days === 1) return 'tomorrow';
+      return `in ${days}d`;
+    };
+
+    // Sort: tags with due cards first, then alphabetical
+    const sortedTags = [...deckTags].sort((a, b) => {
+      const dA = tagDue(a), dB = tagDue(b);
+      if (dA > 0 && dB === 0) return -1;
+      if (dA === 0 && dB > 0) return 1;
+      return a.localeCompare(b);
+    });
+
+    const dueTagsList = sortedTags.filter(t => tagDue(t) > 0);
+    const hasAnyDue   = dueTagsList.length > 0 || untaggedDue > 0;
+
+    const selPool = isPractice ? allCards : dueCards;
+    const noneSelected = selectedTagSet.size === 0 && !includeUntagged;
+    const selTagArr = Array.from(selectedTagSet);
+    const previewCount = noneSelected ? selPool.length : selPool.filter(c => {
+      const ct = c.tags || [];
+      if (ct.length === 0) return includeUntagged;
+      return selTagArr.some(t => ct.includes(t));
+    }).length;
+
+    const selectAllDue = () => {
+      setSelectedTagSet(new Set(dueTagsList));
+      setIncludeUntagged(untaggedDue > 0);
+    };
+
+    return (
+      <div style={{ maxWidth: '580px', margin: '2.5rem auto', padding: '1.5rem 1rem', fontFamily: theme.font }}>
+        <button onClick={() => navigate('/decks')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.primary, fontFamily: theme.font, fontWeight: 700, fontSize: '0.9rem', padding: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          ← {t('backToDecks')}
+        </button>
+
+        <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.4rem', fontWeight: 900, color: theme.text }}>
+          {isPractice ? 'Select tags to study' : 'Choose tags to review'}
+        </h2>
+        <p style={{ margin: '0 0 1rem', fontSize: '0.82rem', color: theme.textLight }}>
+          {isPractice ? 'Pick tags from your full deck — all cards included.' : 'Showing cards due for review today.'}
+        </p>
+
+        {/* SRS summary banner */}
+        {hasAnyDue ? (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', background: '#f9731618', border: '1.5px solid #f9731644', borderRadius: theme.borderRadius, padding: '0.75rem 1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.6 }} style={{ fontSize: '1rem' }}>🔔</motion.span>
+              <span style={{ fontSize: '0.88rem', color: theme.text }}>
+                <strong style={{ color: '#f97316' }}>{dueCards.length} card{dueCards.length !== 1 ? 's' : ''}</strong> due for review — your memory is fading!
+              </span>
+            </div>
+            <button onClick={selectAllDue} style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: '999px', padding: '0.3rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: theme.font }}>
+              Review due →
+            </button>
+          </motion.div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#10b98118', border: '1.5px solid #10b98144', borderRadius: theme.borderRadius, padding: '0.75rem 1rem', marginBottom: '1.5rem' }}>
+            <span>✅</span>
+            <span style={{ fontSize: '0.88rem', color: '#10b981', fontWeight: 700 }}>All caught up! Use Practice mode to review anyway.</span>
+          </div>
+        )}
+
+        {/* Tag grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          {sortedTags.map(tag => {
+            const sel  = selectedTagSet.has(tag);
+            const due  = tagDue(tag);
+            const total = tagTotal(tag);
+            const nextLabel = due === 0
+              ? nextReviewLabel(allCards.filter(c => (c.tags || []).includes(tag)))
+              : null;
+            return (
+              <motion.button key={tag} onClick={() => toggleTag(tag)}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                style={{
+                  padding: '0.9rem 1rem', textAlign: 'left', cursor: 'pointer', fontFamily: theme.font,
+                  border: `2px solid ${sel ? theme.primary : due > 0 ? '#f9731644' : theme.primary + '28'}`,
+                  borderRadius: theme.borderRadius, transition: 'all 0.15s',
+                  background: sel ? `${theme.primary}14` : due > 0 ? '#f9731608' : theme.card,
+                  boxShadow: sel ? `0 0 0 3px ${theme.primary}22` : theme.shadow,
+                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '1rem' }}>🏷️</span>
+                  {due > 0 && (
+                    <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.4 }}
+                      style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
+                  )}
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: theme.text, marginBottom: '0.35rem', wordBreak: 'break-word' }}>{tag}</div>
+                {due > 0 ? (
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#f97316' }}>{due} due · {total} total</div>
+                ) : (
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10b981' }}>
+                    ✓ caught up{nextLabel ? ` · next ${nextLabel}` : ''}
+                  </div>
+                )}
+                <div style={{ fontSize: '0.65rem', color: theme.textLight, marginTop: '0.15rem' }}>{total} cards</div>
+              </motion.button>
+            );
+          })}
+
+          {untaggedTotal > 0 && (() => {
+            const nextLabel = untaggedDue === 0
+              ? nextReviewLabel(allCards.filter(c => !c.tags?.length))
+              : null;
+            return (
+              <motion.button onClick={() => setIncludeUntagged(v => !v)}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                style={{
+                  padding: '0.9rem 1rem', textAlign: 'left', cursor: 'pointer', fontFamily: theme.font,
+                  border: `2px solid ${includeUntagged ? theme.secondary : untaggedDue > 0 ? '#f9731644' : theme.primary + '28'}`,
+                  borderRadius: theme.borderRadius, transition: 'all 0.15s',
+                  background: includeUntagged ? `${theme.secondary}14` : untaggedDue > 0 ? '#f9731608' : theme.card,
+                  boxShadow: includeUntagged ? `0 0 0 3px ${theme.secondary}22` : theme.shadow,
+                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '1rem' }}>📝</span>
+                  {untaggedDue > 0 && (
+                    <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.4 }}
+                      style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
+                  )}
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: theme.text, marginBottom: '0.35rem' }}>Untagged</div>
+                {untaggedDue > 0 ? (
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#f97316' }}>{untaggedDue} due · {untaggedTotal} total</div>
+                ) : (
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10b981' }}>
+                    ✓ caught up{nextLabel ? ` · next ${nextLabel}` : ''}
+                  </div>
+                )}
+                <div style={{ fontSize: '0.65rem', color: theme.textLight, marginTop: '0.15rem' }}>{untaggedTotal} cards</div>
+              </motion.button>
+            );
+          })()}
+        </div>
+
+        <GlassButton onClick={handleStartStudy} fullWidth size="lg"
+          tintColor={noneSelected && hasAnyDue ? '#f97316' : undefined}>
+          {noneSelected
+            ? `${hasAnyDue && !isPractice ? '⚡ ' : ''}Study All · ${selPool.length} card${selPool.length !== 1 ? 's' : ''}`
+            : `Start · ${previewCount} card${previewCount !== 1 ? 's' : ''}`}
+        </GlassButton>
+        {!isPractice && (
+          <p style={{ textAlign: 'center', fontSize: '0.75rem', color: theme.textLight, marginTop: '0.75rem', lineHeight: 1.5 }}>
+            Only cards due today are shown. Ratings schedule your next review using spaced repetition.
+          </p>
+        )}
+      </div>
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   if (cards.length === 0) return (
     <div style={{ maxWidth: '500px', margin: '4rem auto', textAlign: 'center', fontFamily: theme.font }}>
       <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{isPractice ? '📚' : '✅'}</div>
-      <h2 style={{ color: theme.text }}>{isPractice ? 'No cards in this deck' : 'All caught up!'}</h2>
+      <h2 style={{ color: theme.text }}>
+        {isPractice ? 'No cards in this deck' : t('allCaughtUp')}
+      </h2>
+      {tagParam && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: `${theme.primary}18`, color: theme.primary, borderRadius: '999px', padding: '0.2rem 0.75rem', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+          🏷️ {tagParam}
+        </div>
+      )}
       <p style={{ color: theme.textLight }}>
-        {isPractice ? 'Add some cards first.' : 'No cards due for review right now.'}
+        {isPractice
+          ? 'Add some cards first.'
+          : tagParam
+            ? `No cards due for tag "${tagParam}" right now.`
+            : t('noDue')}
       </p>
-      <GlassButton onClick={() => navigate('/decks')} style={{ marginTop: '1rem' }}>Back to Decks</GlassButton>
+      {tagParam && !isPractice && (
+        <GlassButton onClick={() => navigate(`/study/${deckId}?tag=${encodeURIComponent(tagParam)}&mode=practice`)} variant="outline" style={{ marginTop: '0.75rem', marginRight: '0.5rem' }}>
+          Practice all "{tagParam}"
+        </GlassButton>
+      )}
+      <GlassButton onClick={() => navigate('/decks')} style={{ marginTop: '1rem' }}>{t('backToDecks')}</GlassButton>
     </div>
   );
 
@@ -237,8 +441,8 @@ const Study: React.FC = () => {
       onStudyAgain={() => {
         setIndex(0); setFlipped(false); setDone(false);
         setCorrect(0); setCombo(0); setLastRating(null);
-        setHearts(5); startTimeRef.current = Date.now(); setElapsed(0);
-        setMcSelected(null); setMcRevealed(false); setTypingAnswer(''); setTypingResult(null);
+        setMcSelected(null); setMcRevealed(false);
+        if (!tagParam) { setSelectedTagSet(new Set()); setIncludeUntagged(false); setPhase('selecting'); }
       }}
       onBack={() => navigate('/decks')}
     />
@@ -246,35 +450,11 @@ const Study: React.FC = () => {
 
   const current = cards[index];
   const progress = (index / cards.length) * 100;
-  const showHearts = !isPractice && hearts <= 5;
 
   return (
     <>
       <CardFlipParticles trigger={flipTrigger} />
       <RatingFeedback rating={lastRating} ratingKey={ratingKey} combo={combo} />
-
-      {/* ── Hearts-empty overlay ── */}
-      <AnimatePresence>
-        {heartsEmpty && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 9000, background: 'rgba(0,0,0,0.78)',
-              backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.div initial={{ scale: 0.82, y: 24 }} animate={{ scale: 1, y: 0 }}
-              style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '2.25rem',
-                textAlign: 'center', maxWidth: '340px', boxShadow: theme.shadow }}>
-              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>💔</div>
-              <h2 style={{ color: theme.text, margin: '0 0 0.5rem', fontWeight: 900 }}>Out of Hearts!</h2>
-              <p style={{ color: theme.textLight, margin: '0 0 1.5rem', fontSize: '0.88rem', lineHeight: 1.6 }}>
-                Hard cards come back tomorrow. Keep going without limits, or call it a day.
-              </p>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <GlassButton variant="outline" onClick={() => navigate('/decks')} style={{ flex: 1 }}>End Session</GlassButton>
-                <GlassButton onClick={() => { setHeartsEmpty(false); setHearts(999); }} style={{ flex: 1 }}>Continue ∞</GlassButton>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div style={{ minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: theme.font }}>
@@ -286,7 +466,6 @@ const Study: React.FC = () => {
             {([
               ['flashcard', '🃏 Flashcard'],
               ['multiple-choice', '🎯 Multiple Choice'],
-              ['typing', '⌨️ Typing'],
             ] as [StudyMode, string][]).map(([m, label]) => (
               <button key={m} onClick={() => switchMode(m)} style={{
                 flex: 1, padding: '0.42rem 0.25rem', border: 'none', borderRadius: '8px',
@@ -302,39 +481,22 @@ const Study: React.FC = () => {
 
           {/* Header row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-            <span style={{ color: theme.textLight, fontSize: '0.84rem' }}>
+            <span style={{ color: theme.textLight, fontSize: '0.84rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
               {index + 1} / {cards.length}
-              {isPractice && <span style={{ marginLeft: '0.4rem', fontSize: '0.7rem', color: theme.secondary, fontWeight: 800 }}>PRACTICE</span>}
+              {isPractice && <span style={{ fontSize: '0.7rem', color: theme.secondary, fontWeight: 800 }}>PRACTICE</span>}
+              {tagParam && <span style={{ fontSize: '0.7rem', color: theme.primary, fontWeight: 800, background: `${theme.primary}18`, padding: '0.1rem 0.5rem', borderRadius: '999px' }}>🏷️ {tagParam}</span>}
             </span>
 
-            {/* Hearts */}
-            {showHearts && (
-              <div style={{ display: 'flex', gap: '1px' }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <motion.span key={i}
-                    animate={i === hearts - 1 && hearts < 5 ? { scale: [1, 1.5, 1] } : {}}
-                    style={{ fontSize: '0.92rem', opacity: i < hearts ? 1 : 0.18, transition: 'opacity 0.3s' }}>
-                    ❤️
-                  </motion.span>
-                ))}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <AnimatePresence>
-                {combo >= 2 && (
-                  <motion.span key={combo} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                    style={{ fontSize: '0.76rem', fontWeight: 800, color: combo >= 5 ? theme.accent : theme.primary,
-                      background: `${theme.primary}15`, padding: '0.18rem 0.6rem',
-                      borderRadius: '999px', border: `1px solid ${theme.primary}30` }}>
-                    🔥 {combo}×
-                  </motion.span>
-                )}
-              </AnimatePresence>
-              <span style={{ color: theme.textLight, fontSize: '0.8rem', fontVariantNumeric: 'tabular-nums' }}>
-                ⏱ {formatTime(elapsed)}
-              </span>
-            </div>
+            <AnimatePresence>
+              {combo >= 2 && (
+                <motion.span key={combo} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                  style={{ fontSize: '0.76rem', fontWeight: 800, color: combo >= 5 ? theme.accent : theme.primary,
+                    background: `${theme.primary}15`, padding: '0.18rem 0.6rem',
+                    borderRadius: '999px', border: `1px solid ${theme.primary}30` }}>
+                  🔥 {combo}×
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Progress bar */}
@@ -359,7 +521,7 @@ const Study: React.FC = () => {
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: theme.secondary, marginBottom: '1rem', letterSpacing: '0.1em' }}>QUESTION</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 700, color: theme.text, textAlign: 'center', lineHeight: 1.5 }}>{current.front}</div>
                     <div style={{ marginTop: '1.4rem', color: theme.textLight, fontSize: '0.8rem' }}>
-                      {t('flipHint')} 💧 <span style={{ opacity: 0.4, fontSize: '0.68rem' }}>[Space]</span>
+                      {t('flipHint')}
                     </div>
                   </div>
                   {/* Back */}
@@ -379,9 +541,6 @@ const Study: React.FC = () => {
                     </AnimatePresence>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: theme.accent, marginBottom: '1rem', letterSpacing: '0.1em' }}>ANSWER</div>
                     <div style={{ fontSize: '1.1rem', color: theme.text, textAlign: 'center', lineHeight: 1.6 }}>{current.back}</div>
-                    <div style={{ marginTop: '1.2rem', color: theme.textLight, fontSize: '0.7rem', opacity: 0.5 }}>
-                      [1] {t('hard')} · [2] {t('good')} · [3] {t('easy')}
-                    </div>
                   </div>
                 </motion.div>
               </div>
@@ -464,48 +623,6 @@ const Study: React.FC = () => {
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* ════ TYPING MODE ════ */}
-          {mode === 'typing' && (
-            <div>
-              <div style={{ background: theme.card, borderRadius: theme.borderRadius, boxShadow: theme.shadow,
-                border: `2px solid ${theme.primary}33`, padding: '2rem', textAlign: 'center', marginBottom: '1.1rem' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: theme.secondary, marginBottom: '0.9rem', letterSpacing: '0.1em' }}>QUESTION</div>
-                <div style={{ fontSize: '1.18rem', fontWeight: 700, color: theme.text, lineHeight: 1.5 }}>{current.front}</div>
-              </div>
-
-              {typingResult ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  style={{ padding: '1.5rem', textAlign: 'center', borderRadius: theme.borderRadius,
-                    background: typingResult === 'correct' ? '#05966918' : '#dc262618',
-                    border: `2px solid ${typingResult === 'correct' ? '#05966650' : '#dc262650'}` }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{typingResult === 'correct' ? '✅' : '❌'}</div>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: typingResult === 'correct' ? '#059669' : '#dc2626', marginBottom: typingResult === 'wrong' ? '0.5rem' : 0 }}>
-                    {typingResult === 'correct' ? 'Correct!' : 'Not quite...'}
-                  </div>
-                  {typingResult === 'wrong' && (
-                    <div style={{ fontSize: '0.9rem', color: theme.textLight }}>
-                      Answer: <strong style={{ color: theme.text }}>{current.back}</strong>
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                <div>
-                  <input autoFocus value={typingAnswer}
-                    onChange={e => setTypingAnswer(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && typingAnswer.trim()) handleTypingSubmit(); }}
-                    placeholder="Type your answer and press Enter..."
-                    style={{ width: '100%', padding: '0.95rem 1rem', boxSizing: 'border-box',
-                      border: `2px solid ${theme.primary}44`, borderRadius: theme.borderRadius,
-                      background: theme.card, color: theme.text, fontFamily: theme.font,
-                      fontSize: '1rem', outline: 'none', marginBottom: '0.8rem' }} />
-                  <GlassButton onClick={handleTypingSubmit} fullWidth disabled={!typingAnswer.trim()}>
-                    Check Answer →
-                  </GlassButton>
-                </div>
-              )}
             </div>
           )}
 

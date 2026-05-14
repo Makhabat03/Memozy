@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MFlame } from '../MemozyEmoji';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface StreakFlameProps {
   streak: number;
@@ -18,6 +19,7 @@ const EMBERS = [
 ];
 
 const StreakFlame: React.FC<StreakFlameProps> = ({ streak, size = 'sm' }) => {
+  const { t } = useLanguage();
   const alive   = streak > 0;
   const nextTarget  = MILESTONES.find((m) => m > streak) ?? 365;
   const progress    = Math.min(streak / nextTarget, 1);
@@ -122,7 +124,7 @@ const StreakFlame: React.FC<StreakFlameProps> = ({ streak, size = 'sm' }) => {
 
         {/* Progress label */}
         <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.02em' }}>
-          {streak} / {nextTarget} days to next goal
+          {streak} / {nextTarget} {t('daysToNextGoal')}
         </div>
       </div>
     );
@@ -145,6 +147,11 @@ const StreakFlame: React.FC<StreakFlameProps> = ({ streak, size = 'sm' }) => {
         <MFlame size={flameSize} />
       </motion.div>
       <span style={{ fontWeight: 800, fontSize, color: '#f97316' }}>{streak}</span>
+      {size === 'md' && (
+        <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#f97316', opacity: 0.8, lineHeight: 1 }}>
+          {streak === 1 ? 'day' : 'days'}<br />streak
+        </span>
+      )}
     </div>
   );
 };

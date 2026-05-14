@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS public.cards (
   deck_id UUID NOT NULL REFERENCES public.decks(id) ON DELETE CASCADE,
   front TEXT NOT NULL,
   back TEXT NOT NULL,
+  hint TEXT DEFAULT '',
+  tags TEXT[] DEFAULT '{}',
   difficulty INTEGER DEFAULT 0 CHECK (difficulty BETWEEN 0 AND 3),
   next_review TIMESTAMP WITH TIME ZONE,
   interval_days INTEGER DEFAULT 1,

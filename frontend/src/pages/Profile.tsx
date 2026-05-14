@@ -6,29 +6,30 @@ import { useLanguage } from '../context/LanguageContext';
 import { gamifyApi, Profile as ProfileType, Badge } from '../hooks/useApi';
 import StreakFlame from '../components/animations/StreakFlame';
 import { ThemeName, themes, Theme } from '../themes';
-import { LANGUAGES, LangCode } from '../i18n/translations';
 
-const ALL_BADGES = [
-  { type: 'first_deck', icon: '📚', label: 'First Deck' },
-  { type: 'streak_7', icon: '🔥', label: '7-Day Streak' },
-  { type: 'streak_30', icon: '⚡', label: '30-Day Streak' },
-  { type: 'level_5', icon: '⭐', label: 'Level 5' },
-  { type: 'cards_100', icon: '💯', label: '100 Cards' },
-  { type: 'cards_500', icon: '🏆', label: '500 Cards' },
+import type { TranslationKeys } from '../i18n/translations';
+
+const ALL_BADGES: { type: string; icon: string; labelKey: keyof TranslationKeys }[] = [
+  { type: 'first_deck', icon: '📚', labelKey: 'badgeFirstDeck' },
+  { type: 'streak_7',   icon: '🔥', labelKey: 'badgeStreak7' },
+  { type: 'streak_30',  icon: '⚡', labelKey: 'badgeStreak30' },
+  { type: 'level_5',    icon: '⭐', labelKey: 'badgeLevel5' },
+  { type: 'cards_100',  icon: '💯', labelKey: 'badgeCards100' },
+  { type: 'cards_500',  icon: '🏆', labelKey: 'badgeCards500' },
 ];
 
-const STREAK_MILESTONES = [
-  { days: 7,   icon: '🔥', label: '1 Week' },
-  { days: 30,  icon: '⚡', label: '1 Month' },
-  { days: 60,  icon: '💎', label: '2 Months' },
-  { days: 100, icon: '👑', label: '100 Days' },
-  { days: 365, icon: '🌟', label: '1 Year' },
+const STREAK_MILESTONE_DAYS = [
+  { days: 7,   icon: '🔥', key: 'streak1Week'   as const },
+  { days: 30,  icon: '⚡', key: 'streak1Month'  as const },
+  { days: 60,  icon: '💎', key: 'streak2Months' as const },
+  { days: 100, icon: '👑', key: 'streak100Days' as const },
+  { days: 365, icon: '🌟', key: 'streak1Year'   as const },
 ];
 
 const ProfilePage: React.FC = () => {
   const { theme, themeName, setTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const { lang, setLang } = useLanguage();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -43,6 +44,8 @@ const ProfilePage: React.FC = () => {
       setLoading(false);
     });
   }, [user]);
+
+  const STREAK_MILESTONES = STREAK_MILESTONE_DAYS.map(m => ({ ...m, label: t(m.key) }));
 
   const earnedTypes = new Set(badges.map((b) => b.badge_type));
   const xpProgress = profile ? ((profile.xp % 500) / 500) * 100 : 0;
@@ -83,12 +86,12 @@ const ProfilePage: React.FC = () => {
   const statusColor  = lastStudied === today ? safeColor : streakAlive ? warnColor : brokenColor;
   const statusBg     = lastStudied === today ? safeBg    : streakAlive ? warnBg    : brokenBg;
   const statusText   = lastStudied === today
-    ? '✓ Studied today — streak safe!'
+    ? t('studiedTodaySafe')
     : streakAlive
-    ? '! Study today to keep your streak!'
-    : '✕ Streak broken — start a new one!';
+    ? t('studyTodayKeep')
+    : t('streakBrokenMsg');
 
-  if (loading) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: theme.font }}>Loading...</div>;
+  if (loading) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: theme.font }}>{t('loading')}</div>;
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1rem', fontFamily: theme.font }}>
@@ -104,11 +107,11 @@ const ProfilePage: React.FC = () => {
           {profile?.username?.[0]?.toUpperCase() || '?'}
         </div>
         <div style={{ fontSize: '1.4rem', fontWeight: 900, color: theme.text }}>{profile?.username}</div>
-        <div style={{ color: theme.textLight, marginTop: '0.25rem' }}>Level {profile?.level} · {profile?.xp} XP total</div>
+        <div style={{ color: theme.textLight, marginTop: '0.25rem' }}>{t('levelLabel')} {profile?.level} · {profile?.xp} {t('xpTotal')}</div>
         <div style={{ margin: '1rem 0 0.25rem', background: `${theme.primary}22`, borderRadius: '999px', height: '8px' }}>
           <div style={{ width: `${xpProgress}%`, height: '100%', background: theme.primary, borderRadius: '999px', transition: 'width 1s ease' }} />
         </div>
-        <div style={{ fontSize: '0.8rem', color: theme.textLight }}>{500 - (profile?.xp || 0) % 500} XP to next level</div>
+        <div style={{ fontSize: '0.8rem', color: theme.textLight }}>{500 - (profile?.xp || 0) % 500} {t('xpNextLevel')}</div>
       </motion.div>
 
       {/* Streak Hero */}
@@ -132,7 +135,7 @@ const ProfilePage: React.FC = () => {
           {streakCount}
         </div>
         <div style={{ fontSize: '1.1rem', fontWeight: 700, color: theme.text, marginTop: '0.25rem' }}>
-          Day Streak
+          {t('dayStreak')}
         </div>
 
         {/* Status */}
@@ -155,12 +158,12 @@ const ProfilePage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1.25rem' }}>
           <div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: theme.secondary }}>{maxStreak}</div>
-            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>Best Ever</div>
+            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>{t('bestStreak')}</div>
           </div>
           <div style={{ width: '1px', background: `${theme.primary}33` }} />
           <div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: theme.accent }}>{totalDays}</div>
-            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>Days Studied</div>
+            <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>{t('daysStudied')}</div>
           </div>
           <div style={{ width: '1px', background: `${theme.primary}33` }} />
           <div>
@@ -168,11 +171,11 @@ const ProfilePage: React.FC = () => {
               {nextMilestone ? nextMilestone.icon : '👑'}
             </div>
             <div style={{ fontSize: '0.75rem', color: theme.textLight, fontWeight: 600 }}>
-              {nextMilestone ? `${nextMilestone.label} goal` : 'Legendary'}
+              {nextMilestone ? `${nextMilestone.label} ${t('goalSuffix')}` : t('legendaryLabel')}
             </div>
             {daysToNext !== null && (
               <div style={{ fontSize: '0.65rem', color: theme.textLight, opacity: 0.7 }}>
-                {daysToNext} days away
+                {daysToNext} {t('daysAway')}
               </div>
             )}
           </div>
@@ -182,7 +185,7 @@ const ProfilePage: React.FC = () => {
         {nextMilestone && (
           <div style={{ marginTop: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', color: theme.textLight, marginBottom: '0.35rem', textAlign: 'left' }}>
-              Progress to {nextMilestone.icon} {nextMilestone.label} ({nextMilestone.days} days)
+              {t('progressTo')} {nextMilestone.icon} {nextMilestone.label} ({nextMilestone.days} {t('dayStreakLabel')})
             </div>
             <div style={{ background: `${theme.primary}22`, borderRadius: '999px', height: '7px' }}>
               <motion.div
@@ -193,8 +196,8 @@ const ProfilePage: React.FC = () => {
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: theme.textLight, marginTop: '0.2rem' }}>
-              <span>Day {streakCount}</span>
-              <span>Day {nextMilestone.days}</span>
+              <span>{t('dayLabel')} {streakCount}</span>
+              <span>{t('dayLabel')} {nextMilestone.days}</span>
             </div>
           </div>
         )}
@@ -228,8 +231,8 @@ const ProfilePage: React.FC = () => {
       {/* 90-Day Activity */}
       <div data-tour="profile-activity" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontWeight: 800, color: theme.text, margin: 0 }}>90-Day Activity</h3>
-          <span style={{ fontSize: '0.78rem', color: theme.textLight }}>{totalDays} active days</span>
+          <h3 style={{ fontWeight: 800, color: theme.text, margin: 0 }}>{t('activityLabel')}</h3>
+          <span style={{ fontSize: '0.78rem', color: theme.textLight }}>{totalDays} {t('activeDays')}</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, 1fr)', gap: '3px' }}>
           {days.map((day) => {
@@ -254,24 +257,24 @@ const ProfilePage: React.FC = () => {
           })}
         </div>
         <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.75rem', fontSize: '0.72rem', color: theme.textLight }}>
-          <span>← 90 days ago</span>
-          <span style={{ marginLeft: 'auto' }}>Today →</span>
+          <span>← {t('daysAgoLabel')}</span>
+          <span style={{ marginLeft: 'auto' }}>{t('todayLabel')} →</span>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem', fontSize: '0.72rem', color: theme.textLight }}>
           <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: `${theme.primary}15` }} />
-          <span>No study</span>
+          <span>{t('noStudy')}</span>
           <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, marginLeft: '0.5rem' }} />
-          <span>Studied</span>
+          <span>{t('studiedLabel')}</span>
           <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: `${theme.primary}15`, border: `2px solid ${theme.accent}`, boxSizing: 'border-box', marginLeft: '0.5rem' }} />
-          <span>Today</span>
+          <span>{t('todayLabel')}</span>
         </div>
       </div>
 
       {/* Badges */}
       <div data-tour="profile-badges" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
-        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>Badges</h3>
+        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>{t('badges')}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-          {ALL_BADGES.map(({ type, icon, label }) => {
+          {ALL_BADGES.map(({ type, icon, labelKey }) => {
             const earned = earnedTypes.has(type);
             return (
               <div
@@ -286,53 +289,9 @@ const ProfilePage: React.FC = () => {
                 }}
               >
                 <div style={{ fontSize: '1.75rem', marginBottom: '0.35rem', filter: earned ? 'none' : 'grayscale(1)' }}>{icon}</div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: theme.text }}>{label}</div>
-                {earned && <div style={{ fontSize: '0.65rem', color: theme.accent, marginTop: '0.2rem' }}>Earned ✓</div>}
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: theme.text }}>{t(labelKey)}</div>
+                {earned && <div style={{ fontSize: '0.65rem', color: theme.accent, marginTop: '0.2rem' }}>{t('badgeEarned')}</div>}
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Language */}
-      <div style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
-        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem', margin: '0 0 1rem' }}>Language</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.6rem' }}>
-          {LANGUAGES.map((l) => {
-            const active = lang === l.code;
-            return (
-              <motion.button
-                key={l.code}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setLang(l.code as LangCode)}
-                style={{
-                  padding: '0.65rem 0.75rem',
-                  border: `2px solid ${active ? theme.primary : theme.primary + '33'}`,
-                  borderRadius: theme.borderRadius,
-                  background: active ? `${theme.primary}18` : 'transparent',
-                  fontFamily: theme.font,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.55rem',
-                  transition: 'all 0.15s',
-                  textAlign: 'left',
-                }}
-              >
-                <span style={{ fontSize: '1.4rem', lineHeight: 1, flexShrink: 0 }}>{l.flag}</span>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: active ? theme.primary : theme.text, lineHeight: 1.2 }}>
-                    {l.label}
-                  </div>
-                  <div style={{ fontSize: '0.68rem', color: theme.textLight, marginTop: '0.1rem' }}>
-                    {l.english}
-                  </div>
-                </div>
-                {active && (
-                  <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: theme.primary, fontWeight: 900 }}>✓</span>
-                )}
-              </motion.button>
             );
           })}
         </div>
@@ -340,21 +299,21 @@ const ProfilePage: React.FC = () => {
 
       {/* Theme */}
       <div data-tour="theme-picker" style={{ background: theme.card, borderRadius: theme.borderRadius, padding: '1.5rem', boxShadow: theme.shadow }}>
-        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>Theme</h3>
+        <h3 style={{ fontWeight: 800, color: theme.text, marginBottom: '1rem' }}>{t('theme')}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.6rem' }}>
-          {(Object.values(themes) as Theme[]).map((t) => (
+          {(Object.values(themes) as Theme[]).map((th) => (
             <button
-              key={t.name}
-              onClick={() => setTheme(t.name as ThemeName)}
+              key={th.name}
+              onClick={() => setTheme(th.name as ThemeName)}
               style={{
                 padding: '0.65rem 0.5rem',
-                border: `2px solid ${themeName === t.name ? t.primary : t.primary + '44'}`,
-                borderRadius: t.borderRadius,
-                background: themeName === t.name ? `${t.primary}18` : t.card,
+                border: `2px solid ${themeName === th.name ? th.primary : th.primary + '44'}`,
+                borderRadius: th.borderRadius,
+                background: themeName === th.name ? `${th.primary}18` : th.card,
                 fontFamily: theme.font,
                 fontWeight: 700,
                 fontSize: '0.8rem',
-                color: themeName === t.name ? t.primary : theme.textLight,
+                color: themeName === th.name ? th.primary : theme.textLight,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
@@ -363,8 +322,8 @@ const ProfilePage: React.FC = () => {
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: '1.25rem' }}>{t.emoji}</span>
-              <span>{t.label}</span>
+              <span style={{ fontSize: '1.25rem' }}>{th.emoji}</span>
+              <span>{th.label}</span>
             </button>
           ))}
         </div>
