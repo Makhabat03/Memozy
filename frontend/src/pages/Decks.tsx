@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
@@ -128,6 +128,22 @@ const Decks: React.FC = () => {
       return next;
     });
 
+  const deckMeta = useMemo(() => {
+    const now = new Date();
+    const result: Record<string, { tags: string[]; totalDue: number; tagDue: Record<string, number> }> = {};
+    Object.keys(deckCards).forEach(deckId => {
+      const cards = deckCards[deckId];
+      const tags = Array.from(new Set(cards.flatMap(c => c.tags || [])));
+      const due = cards.filter(c => !c.next_review || new Date(c.next_review) <= now);
+      const tagDue: Record<string, number> = {};
+      tags.forEach(tag => {
+        tagDue[tag] = due.filter(c => (c.tags || []).includes(tag)).length;
+      });
+      result[deckId] = { tags, totalDue: due.length, tagDue };
+    });
+    return result;
+  }, [deckCards]);
+
   const getDeckFolder = (deckId: string) => folders.find(f => f.deckIds.includes(deckId));
   const folderedIds = new Set(folders.flatMap(f => f.deckIds));
   const unfoldered = decks.filter(d => !folderedIds.has(d.id));
@@ -136,12 +152,8 @@ const Decks: React.FC = () => {
 
   const renderDeckCard = (deck: Deck, i: number) => {
     const currentFolder = getDeckFolder(deck.id);
-    const cardList = deckCards[deck.id] || [];
-    const now = new Date();
-    const deckTags = Array.from(new Set(cardList.flatMap(c => c.tags || [])));
-    const tagDueCount = (tag: string) =>
-      cardList.filter(c => (c.tags || []).includes(tag) && (!c.next_review || new Date(c.next_review) <= now)).length;
-    const totalDue = cardList.filter(c => !c.next_review || new Date(c.next_review) <= now).length;
+    const { tags: deckTags, totalDue, tagDue } = deckMeta[deck.id] || { tags: [], totalDue: 0, tagDue: {} };
+    const tagDueCount = (tag: string) => tagDue[tag] || 0;
 
     return (
       <motion.div key={deck.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}

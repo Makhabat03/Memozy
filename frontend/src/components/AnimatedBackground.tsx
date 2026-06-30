@@ -22,12 +22,26 @@ const AnimatedBackground: React.FC = () => {
       H = window.innerHeight;
       canvas.width = W;
       canvas.height = H;
+      gridCanvas = null;
+      if (themeName === 'darkFuturistic') buildGrid();
       init();
     };
 
     // ── DARK FUTURISTIC ── neural network with 3D perspective ──
+    let gridCanvas: HTMLCanvasElement | null = null;
+    const buildGrid = () => {
+      gridCanvas = document.createElement('canvas');
+      gridCanvas.width = W; gridCanvas.height = H;
+      const gc = gridCanvas.getContext('2d')!;
+      gc.strokeStyle = 'rgba(0,255,231,0.05)';
+      gc.lineWidth = 1;
+      for (let x = 0; x < W; x += 60) { gc.beginPath(); gc.moveTo(x, 0); gc.lineTo(x, H); gc.stroke(); }
+      for (let y = 0; y < H; y += 60) { gc.beginPath(); gc.moveTo(0, y); gc.lineTo(W, y); gc.stroke(); }
+    };
+
     const initDarkFuturistic = () => {
-      particles = Array.from({ length: 70 }, () => ({
+      buildGrid();
+      particles = Array.from({ length: 45 }, () => ({
         x: (Math.random() - 0.5) * 1400,
         y: (Math.random() - 0.5) * 900,
         z: Math.random() * 600 + 100,
@@ -41,11 +55,8 @@ const AnimatedBackground: React.FC = () => {
       ctx.fillStyle = '#000d0d';
       ctx.fillRect(0, 0, W, H);
 
-      // Subtle grid
-      ctx.strokeStyle = 'rgba(0,255,231,0.05)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      // Draw cached grid
+      if (gridCanvas) ctx.drawImage(gridCanvas, 0, 0);
 
       const FOV = 500;
       const cx = W / 2, cy = H / 2;
@@ -81,20 +92,16 @@ const AnimatedBackground: React.FC = () => {
         }
       }
 
-      // Nodes
+      // Nodes — avoid createRadialGradient per node; use shadowBlur once
+      ctx.shadowBlur = 8;
       proj.forEach(({ px, py, scale, accent }) => {
         const r = Math.max(0.5, scale * 3);
-        const [nr, ng, nb] = accent ? [255, 45, 107] : [0, 255, 231];
-        // Glow
-        const grd = ctx.createRadialGradient(px, py, 0, px, py, r * 5);
-        grd.addColorStop(0, `rgba(${nr},${ng},${nb},${0.22 * scale})`);
-        grd.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.beginPath(); ctx.arc(px, py, r * 5, 0, Math.PI * 2);
-        ctx.fillStyle = grd; ctx.fill();
-        // Core
+        const color = accent ? `rgba(255,45,107,${0.5 + scale * 0.4})` : `rgba(0,255,231,${0.5 + scale * 0.4})`;
+        ctx.shadowColor = accent ? 'rgba(255,45,107,0.6)' : 'rgba(0,255,231,0.6)';
         ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${nr},${ng},${nb},${0.5 + scale * 0.4})`; ctx.fill();
+        ctx.fillStyle = color; ctx.fill();
       });
+      ctx.shadowBlur = 0;
     };
 
     // ── COSMIC ── nebulae + warp stars + twinkling field ──
@@ -130,7 +137,7 @@ const AnimatedBackground: React.FC = () => {
           hue: Math.random() > 0.6 ? 280 : Math.random() > 0.5 ? 260 : 0,
         })),
         // Warp-speed stars
-        ...Array.from({ length: 280 }, () => {
+        ...Array.from({ length: 150 }, () => {
           const z = Math.random() * 1200;
           return {
             type: 'warp',

@@ -15,7 +15,7 @@ const gentleSpring = { type: 'spring' as const, stiffness: 180, damping: 24 };
 
 const containerVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+  visible: { transition: { staggerChildren: 0.04, delayChildren: 0 } },
 } as any;
 
 const itemVariants = {

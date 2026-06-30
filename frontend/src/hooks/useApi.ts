@@ -5,6 +5,21 @@ const api = axios.create({
   timeout: 30000,
 });
 
+const _cache = new Map<string, { data: any; ts: number }>();
+const TTL = 60_000;
+
+function withCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const hit = _cache.get(key);
+  if (hit && Date.now() - hit.ts < TTL) return Promise.resolve(hit.data as T);
+  return fetcher().then(data => { _cache.set(key, { data, ts: Date.now() }); return data; });
+}
+
+function invalidate(...prefixes: string[]) {
+  Array.from(_cache.keys()).forEach(k => {
+    if (prefixes.some(p => k.startsWith(p))) _cache.delete(k);
+  });
+}
+
 export interface Card {
   id: string;
   deck_id: string;
@@ -61,32 +76,41 @@ export interface StudyCompleteResponse {
 }
 
 export const decksApi = {
-  list: (userId: string) => api.get<{ decks: Deck[] }>('/decks/', { params: { user_id: userId } }),
+  list: (userId: string) =>
+    withCache(`decks:${userId}`, () => api.get<{ decks: Deck[] }>('/decks/', { params: { user_id: userId } })),
   create: (data: { user_id: string; title: string; description?: string; is_public?: boolean }) =>
-    api.post<{ deck: Deck }>('/decks/', data),
-  get: (id: string) => api.get<{ deck: Deck }>(`/decks/${id}`),
-  update: (id: string, data: Partial<Deck>) => api.put<{ deck: Deck }>(`/decks/${id}`, data),
-  delete: (id: string) => api.delete(`/decks/${id}`),
-  setVisibility: (id: string, isPublic: boolean) => api.put<{ deck: Deck }>(`/decks/${id}`, { is_public: isPublic }),
+    api.post<{ deck: Deck }>('/decks/', data).then(r => { invalidate('decks:'); return r; }),
+  get: (id: string) =>
+    withCache(`deck:${id}`, () => api.get<{ deck: Deck }>(`/decks/${id}`)),
+  update: (id: string, data: Partial<Deck>) =>
+    api.put<{ deck: Deck }>(`/decks/${id}`, data).then(r => { invalidate('decks:', `deck:${id}`); return r; }),
+  delete: (id: string) =>
+    api.delete(`/decks/${id}`).then(r => { invalidate('decks:', `deck:${id}`, `cards:${id}`); return r; }),
+  setVisibility: (id: string, isPublic: boolean) =>
+    api.put<{ deck: Deck }>(`/decks/${id}`, { is_public: isPublic }).then(r => { invalidate('decks:', `deck:${id}`); return r; }),
   getPublic: (id: string) => api.get<{ deck: Deck }>(`/decks/public/${id}`),
 };
 
 export const cardsApi = {
-  getByDeck: (deckId: string) => api.get<{ cards: Card[] }>(`/cards/${deckId}`),
+  getByDeck: (deckId: string) =>
+    withCache(`cards:${deckId}`, () => api.get<{ cards: Card[] }>(`/cards/${deckId}`)),
   generateFromText: (data: { text: string; deck_id: string; num_cards: number; language?: string; difficulty_mode?: string }) =>
-    api.post<{ cards: Card[]; count: number }>('/cards/generate/text', data),
+    api.post<{ cards: Card[]; count: number }>('/cards/generate/text', data)
+      .then(r => { invalidate(`cards:${data.deck_id}`, 'decks:'); return r; }),
   generateFromPdf: (formData: FormData) =>
     api.post<{ cards: Card[]; count: number }>('/cards/generate/pdf', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    }).then(r => { invalidate('cards:', 'decks:'); return r; }),
   generateFromImage: (formData: FormData) =>
     api.post<{ cards: Card[]; count: number }>('/cards/generate/image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-  update: (id: string, data: Partial<Card>) => api.put<{ card: Card }>(`/cards/${id}`, data),
+    }).then(r => { invalidate('cards:', 'decks:'); return r; }),
+  update: (id: string, data: Partial<Card>) =>
+    api.put<{ card: Card }>(`/cards/${id}`, data).then(r => { invalidate('cards:'); return r; }),
   createCard: (data: { deck_id: string; front: string; back: string; hint?: string; tags?: string[] }) =>
-    api.post<{ card: Card }>('/cards/', data),
-  deleteCard: (cardId: string) => api.delete(`/cards/${cardId}`),
+    api.post<{ card: Card }>('/cards/', data).then(r => { invalidate(`cards:${data.deck_id}`, 'decks:'); return r; }),
+  deleteCard: (cardId: string) =>
+    api.delete(`/cards/${cardId}`).then(r => { invalidate('cards:'); return r; }),
 };
 
 export const studyApi = {
@@ -102,9 +126,11 @@ export const gamifyApi = {
     deck_id: string;
     cards_reviewed: number;
     correct_count: number;
-  }) => api.post<StudyCompleteResponse>('/gamify/study-complete', data),
+  }) => api.post<StudyCompleteResponse>('/gamify/study-complete', data)
+    .then(r => { invalidate(`profile:${data.user_id}`); return r; }),
   getProfile: (userId: string) =>
-    api.get<{ profile: Profile; badges: Badge[]; recent_sessions: any[] }>(`/gamify/profile/${userId}`),
+    withCache(`profile:${userId}`, () =>
+      api.get<{ profile: Profile; badges: Badge[]; recent_sessions: any[] }>(`/gamify/profile/${userId}`)),
 };
 
 export const socialApi = {

@@ -64,9 +64,11 @@ const CursorEffect: React.FC = () => {
       mouseRef.current = { x: e.clientX, y: e.clientY, prevX: prev.x, prevY: prev.y };
 
       const speed = Math.sqrt(dx * dx + dy * dy);
-      const count = Math.min(Math.floor(speed / 4) + 1, 7);
+      const count = Math.min(Math.floor(speed / 6) + 1, 4);
       const t = themeRef.current;
       const colors = [t.primary, t.secondary, t.accent];
+
+      if (particlesRef.current.length >= MAX_PARTICLES) return;
 
       for (let i = 0; i < count; i++) {
         const usestar = Math.random() > 0.5;
@@ -111,33 +113,44 @@ const CursorEffect: React.FC = () => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('click', onClick);
 
+    const MAX_PARTICLES = 60;
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particlesRef.current = particlesRef.current.filter(p => p.alpha > 0.02);
 
+      // Group by color to minimize state changes — shadowBlur set once per color group
+      const byColor = new Map<string, Particle[]>();
       for (const p of particlesRef.current) {
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 10;
-        if (p.type === 'star') {
-          drawStar(ctx, p.x, p.y, p.size, p.rotation);
-        } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.04;
-        p.alpha *= 0.91;
-        p.size *= 0.96;
-        p.rotation += p.rotSpeed;
+        let arr = byColor.get(p.color);
+        if (!arr) { arr = []; byColor.set(p.color, arr); }
+        arr.push(p);
       }
+
+      ctx.shadowBlur = 8;
+      byColor.forEach((group, color) => {
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        for (const p of group) {
+          ctx.globalAlpha = p.alpha;
+          if (p.type === 'star') {
+            drawStar(ctx, p.x, p.y, p.size, p.rotation);
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.04;
+          p.alpha *= 0.91;
+          p.size *= 0.96;
+          p.rotation += p.rotSpeed;
+        }
+      });
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
 
       // cursor ring
       const { x, y } = mouseRef.current;
@@ -150,14 +163,13 @@ const CursorEffect: React.FC = () => {
         ctx.lineWidth = 2;
         ctx.globalAlpha = 0.65;
         ctx.shadowColor = themeRef.current.primary;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(x, y, 13 * scale, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = themeRef.current.primary;
-        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
